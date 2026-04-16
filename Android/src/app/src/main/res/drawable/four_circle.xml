@@ -1,0 +1,26 @@
+<!--
+ Copyright 2025 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
+    android:viewportWidth="59"
+    android:viewportHeight="59"
+    android:width="59dp"
+    android:height="59dp">
+    <path
+        android:pathData="M1.3077 21.3393C-4.19593 8.66644 8.66702 -4.19605 21.3396 1.30784L23.4364 2.21791C27.3032 3.89848 31.6966 3.89848 35.5666 2.21791L37.6602 1.30784C50.3359 -4.19605 63.1957 8.66644 57.6921 21.3393L56.7817 23.4344C55.1036 27.3037 55.1036 31.6964 56.7817 35.5654L57.6921 37.6609C63.1957 50.3337 50.3359 63.1962 37.6602 57.692L35.5666 56.782C31.6966 55.1017 27.3032 55.1017 23.4364 56.782L21.3396 57.692C8.66702 63.1962 -4.19593 50.3337 1.3077 37.6609L2.21809 35.5654C3.89932 31.6964 3.89932 27.3037 2.21809 23.4344L1.3077 21.3393Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="1" />
+</vector>

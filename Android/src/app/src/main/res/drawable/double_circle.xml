@@ -1,0 +1,26 @@
+<!--
+ Copyright 2025 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
+    android:viewportWidth="62"
+    android:viewportHeight="62"
+    android:width="62dp"
+    android:height="62dp">
+    <path
+        android:pathData="M7.78628 54.2125C-2.59542 43.8291 -2.59542 26.9941 7.78628 16.6107L16.6114 7.78754C26.9931 -2.59584 43.8287 -2.59584 54.2137 7.78754C64.5954 18.1709 64.5954 35.0059 54.2137 45.3893L45.3886 54.2125C35.0069 64.5958 18.1713 64.5958 7.78628 54.2125Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="1" />
+</vector>

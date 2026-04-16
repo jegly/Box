@@ -1,0 +1,198 @@
+/*
+ * Copyright 2025 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.ai.edge.gallery.ui.common.modelitem
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.UnfoldLess
+import androidx.compose.material.icons.rounded.UnfoldMore
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ripple
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import com.google.ai.edge.gallery.R
+import com.google.ai.edge.gallery.data.Model
+import com.google.ai.edge.gallery.data.ModelDownloadStatusType
+import com.google.ai.edge.gallery.data.RuntimeType
+import com.google.ai.edge.gallery.data.Task
+import com.google.ai.edge.gallery.ui.common.MarkdownText
+import com.google.ai.edge.gallery.ui.modelmanager.ModelManagerViewModel
+import com.google.ai.edge.gallery.ui.theme.customColors
+
+/**
+ * Composable function to display a model item in the model manager list.
+ *
+ * This function renders a card representing a model, displaying its task icon, name, download
+ * status, and providing action buttons. It supports expanding to show a model description and
+ * buttons for learning more (opening a URL) and downloading/trying the model.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun ModelItem(
+  model: Model,
+  task: Task?,
+  modelManagerViewModel: ModelManagerViewModel,
+  onModelClicked: (Model) -> Unit,
+  onBenchmarkClicked: (Model) -> Unit,
+  modifier: Modifier = Modifier,
+  expanded: Boolean? = null,
+  showDeleteButton: Boolean = true,
+  canExpand: Boolean = true,
+  showBenchmarkButton: Boolean = false,
+  onExpanded: (Boolean) -> Unit = {},
+) {
+  val modelManagerUiState by modelManagerViewModel.uiState.collectAsState()
+  val downloadStatus by remember {
+    derivedStateOf { modelManagerUiState.modelDownloadStatus[model.name] }
+  }
+
+  val isBestOverall = model.bestForTaskIds.contains(task?.id ?: "")
+  var isExpanded by remember { mutableStateOf(expanded ?: isBestOverall) }
+
+  val isDownloadFailed = downloadStatus?.status == ModelDownloadStatusType.FAILED
+  val isAicore = model.runtimeType == RuntimeType.AICORE
+
+  var boxModifier =
+    modifier
+      .fillMaxWidth()
+      .clip(RoundedCornerShape(size = 12.dp))
+      .background(color = MaterialTheme.customColors.taskCardBgColor)
+  boxModifier =
+    if (canExpand) {
+      boxModifier.clickable(
+        onClick = {
+          if (!model.imported) {
+            isExpanded = !isExpanded
+            onExpanded(isExpanded)
+          } else if (!showBenchmarkButton) {
+            onModelClicked(model)
+          }
+        },
+        interactionSource = remember { MutableInteractionSource() },
+        indication = ripple(bounded = true, radius = 1000.dp),
+      )
+    } else {
+      boxModifier
+    }
+
+  Box(modifier = boxModifier) {
+    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      Box(
+        modifier = Modifier.semantics { isTraversalGroup = true },
+        contentAlignment = Alignment.CenterStart,
+      ) {
+        ModelNameAndStatus(
+          model = model,
+          task = task,
+          downloadStatus = downloadStatus,
+          isExpanded = isExpanded,
+          modifier = Modifier.fillMaxWidth(),
+        )
+        // Button to delete model and expand/collapse button at the right.
+        Row(verticalAlignment = Alignment.Top, modifier = Modifier.align(Alignment.TopEnd)) {
+          if (model.localFileRelativeDirPathOverride.isEmpty()) {
+            DeleteModelButton(
+              model = model,
+              modelManagerViewModel = modelManagerViewModel,
+              downloadStatus = downloadStatus,
+              modifier = Modifier.offset(y = (-12).dp, x = if (model.imported) 12.dp else 0.dp),
+              showDeleteButton = showDeleteButton && !isAicore,
+            )
+          }
+          if (!model.imported) {
+            Icon(
+              if (isExpanded) Icons.Rounded.UnfoldLess else Icons.Rounded.UnfoldMore,
+              contentDescription =
+                stringResource(
+                  if (isExpanded) R.string.cd_collapse_icon else R.string.cd_expand_icon
+                ),
+              tint = MaterialTheme.colorScheme.onSurfaceVariant,
+              modifier = Modifier.alpha(0.6f),
+            )
+          }
+        }
+      }
+      AnimatedContent(isExpanded, label = "item_layout_transition") { targetState ->
+        // Show description when expanded.
+        if (targetState) {
+          Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            if (model.info.isNotEmpty()) {
+              MarkdownText(
+                model.info,
+                smallFontSize = true,
+                textColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 12.dp),
+              )
+            }
+            if (isAicore && isDownloadFailed) {
+              AICoreAccessPanel()
+            }
+          }
+        }
+      }
+      SharedTransitionLayout {
+        AnimatedContent(isExpanded, label = "item_layout_transition") { targetState ->
+          DownloadModelPanel(
+            task = task,
+            model = model,
+            downloadStatus = downloadStatus,
+            animatedVisibilityScope = this@AnimatedContent,
+            sharedTransitionScope = this@SharedTransitionLayout,
+            modifier =
+              Modifier.sharedElement(
+                  sharedContentState = rememberSharedContentState(key = "download_panel"),
+                  animatedVisibilityScope = this@AnimatedContent,
+                )
+                .padding(top = if (targetState) 12.dp else 0.dp),
+            modelManagerViewModel = modelManagerViewModel,
+            isExpanded = targetState,
+            onTryItClicked = { onModelClicked(model) },
+            onBenchmarkClicked = { onBenchmarkClicked(model) },
+            showBenchmarkButton = showBenchmarkButton,
+          )
+        }
+      }
+    }
+  }
+}

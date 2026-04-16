@@ -1,0 +1,19 @@
+// Bundle config for the Google AI Edge Gallery app.
+// See: https://developer.android.com/studio/build/building-cmdline#bundleconfig
+{
+  "optimizations": {
+    "splitsConfig": {
+      "splitDimension": [
+        {
+          "value": "ABI"
+        },
+        {
+          "value": "SCREEN_DENSITY"
+        },
+        {
+          "value": "LANGUAGE"
+        }
+      ]
+    }
+  }
+}
