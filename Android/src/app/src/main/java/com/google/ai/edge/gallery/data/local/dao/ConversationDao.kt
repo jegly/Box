@@ -20,6 +20,9 @@ interface ConversationDao {
     @Query("SELECT * FROM conversations WHERE taskType = :taskType ORDER BY updatedAt DESC")
     fun getConversationsByTask(taskType: String): Flow<List<Conversation>>
 
+    @Query("SELECT * FROM conversations WHERE modelName = :modelName ORDER BY updatedAt DESC LIMIT 1")
+    suspend fun getLatestForModel(modelName: String): Conversation?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(conversation: Conversation)
 

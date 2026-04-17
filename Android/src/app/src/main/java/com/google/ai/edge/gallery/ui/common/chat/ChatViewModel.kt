@@ -22,6 +22,8 @@ import androidx.lifecycle.ViewModel
 import com.google.ai.edge.gallery.common.processLlmResponse
 import com.google.ai.edge.gallery.data.ConfigKeys
 import com.google.ai.edge.gallery.data.Model
+import com.google.ai.edge.gallery.data.local.ChatRepository
+import com.google.ai.edge.gallery.ui.common.chat.ChatSide
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -48,15 +50,18 @@ data class ChatUiState(
 )
 
 /** ViewModel responsible for managing the chat UI state and handling chat-related operations. */
-abstract class ChatViewModel() : ViewModel() {
-  private val _uiState = MutableStateFlow(createUiState())
+abstract class ChatViewModel : ViewModel() {
+  protected val _uiState = MutableStateFlow(createUiState())
   val uiState = _uiState.asStateFlow()
+  
+  // Subclasses should override this to provide the repository
+  protected abstract val chatRepository: ChatRepository
 
   fun addMessage(model: Model, message: ChatMessage) {
     val newMessagesByModel = _uiState.value.messagesByModel.toMutableMap()
     val newMessages = newMessagesByModel[model.name]?.toMutableList() ?: mutableListOf()
     newMessagesByModel[model.name] = newMessages
-    // Remove prompt template message if it is the current last message.
+    // Remove prompt template message if it is to current last message.
     if (newMessages.size > 0 && newMessages.last().type == ChatMessageType.PROMPT_TEMPLATES) {
       newMessages.removeAt(newMessages.size - 1)
     }

@@ -155,32 +155,32 @@ val lightCustomColors =
         Color(0xFFFFF5F5),
         // green
         Color(0xFFF4FBF6),
-        // blue
+        // phosphorus green
         Color(0xFFF1F6FE),
         // yellow
         Color(0xFFFFFBF0),
       ),
     taskBgGradientColors =
       listOf(
-        // red
-        listOf(Color(0xFFE25F57), Color(0xFFDB372D)),
-        // green
-        listOf(Color(0xFF41A15F), Color(0xFF128937)),
-        // blue
-        listOf(Color(0xFF669DF6), Color(0xFF3174F1)),
-        // yellow
-        listOf(Color(0xFFFDD45D), Color(0xFFCAA12A)),
+        // dark grey gradient
+        listOf(Color(0xFF4A4A4A), Color(0xFF2C2C2C)),
+        // dark grey gradient
+        listOf(Color(0xFF4A4A4A), Color(0xFF2C2C2C)),
+        // dark grey gradient
+        listOf(Color(0xFF4A4A4A), Color(0xFF2C2C2C)),
+        // dark grey gradient
+        listOf(Color(0xFF4A4A4A), Color(0xFF2C2C2C)),
       ),
     taskIconColors =
       listOf(
-        // red.
-        Color(0xFFDB372D),
-        // green
+        // green gradient 1
+        Color(0xFF2D5A2D),
+        // green gradient 2
         Color(0xFF128937),
-        // blue
-        Color(0xFF3174F1),
-        // yellow
-        Color(0xFFCAA12A),
+        // phosphorus green
+        Color(0xFF4BFF00),
+        // green gradient 3
+        Color(0xFF1A331A),
       ),
     taskIconShapeBgColor = Color.White,
     homeBottomGradient = listOf(Color(0x00F8F9FF), Color(0xffFFEFC9)),
@@ -233,32 +233,32 @@ val darkCustomColors =
         Color(0xFF181210),
         // green
         Color(0xFF131711),
-        // blue
+        // phosphorus green
         Color(0xFF191924),
         // yellow
         Color(0xFF1A1813),
       ),
     taskBgGradientColors =
       listOf(
-        // red
-        listOf(Color(0xFFE25F57), Color(0xFFDB372D)),
-        // green
-        listOf(Color(0xFF41A15F), Color(0xFF128937)),
-        // blue
-        listOf(Color(0xFF669DF6), Color(0xFF3174F1)),
-        // yellow
-        listOf(Color(0xFFFDD45D), Color(0xFFCAA12A)),
+        // dark grey gradient
+        listOf(Color(0xFF4A4A4A), Color(0xFF2C2C2C)),
+        // dark grey gradient
+        listOf(Color(0xFF4A4A4A), Color(0xFF2C2C2C)),
+        // dark grey gradient
+        listOf(Color(0xFF4A4A4A), Color(0xFF2C2C2C)),
+        // dark grey gradient
+        listOf(Color(0xFF4A4A4A), Color(0xFF2C2C2C)),
       ),
     taskIconColors =
       listOf(
-        // red.
-        Color(0xFFE25F57),
-        // green
+        // green gradient 1
+        Color(0xFF2D5A2D),
+        // green gradient 2
         Color(0xFF41A15F),
-        // blue
-        Color(0xFF669DF6),
-        // yellow
-        Color(0xFFCAA12A),
+        // phosphorus green
+        Color(0xFF4BFF00),
+        // green gradient 3
+        Color(0xFF1A331A),
       ),
     taskIconShapeBgColor = Color(0xFF202124),
     homeBottomGradient = listOf(Color(0x00F8F9FF), Color(0x1AF6AD01)),

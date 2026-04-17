@@ -16,7 +16,6 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.google.ai.edge.gallery"
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-sdk
@@ -52,18 +51,18 @@
         android:required="false" />
 
     <application
-        android:name="${applicationName}"
+        android:name="com.box.gallery.GalleryApplication"
         android:allowBackup="false"
         android:hasFragileUserData="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:icon="@mipmap/ic_launcher"
         android:label="Box"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.Gallery"
         android:memtagMode="async"
-        android:networkSecurityConfig="@xml/network_security_config"
         android:enableOnBackInvokedCallback="true"
         tools:targetApi="36">
         <!--
@@ -72,9 +71,9 @@
           Instead, just recompose the view.
          -->
         <activity
-            android:name="com.google.ai.edge.gallery.MainActivity"
+            android:name="com.box.gallery.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Gallery.SplashScreen"
+            android:theme="@style/Theme.Gallery"
             android:windowSoftInputMode="adjustResize"
             android:configChanges="uiMode"
             tools:ignore="DiscouragedApi">
@@ -93,7 +92,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="com.google.ai.edge.gallery" />
+                <data android:scheme="com.box.gallery" />
             </intent-filter>
         </activity>
 
@@ -148,7 +147,7 @@
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="box_high_priority_push_channel" />
+            android:value="gallery_high_priority_push_channel" />
 
         <uses-native-library android:name="libvndksupport.so" android:required="false"/>
         <uses-native-library android:name="libOpenCL.so" android:required="false"/>

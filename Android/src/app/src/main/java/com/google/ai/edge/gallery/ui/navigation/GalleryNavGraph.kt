@@ -154,7 +154,7 @@ fun GalleryNavHost(
   val lifecycleOwner = LocalLifecycleOwner.current
   var showModelManager by remember { mutableStateOf(false) }
   var pickedTask by remember { mutableStateOf<Task?>(null) }
-  var enableHomeScreenAnimation by remember { mutableStateOf(true) }
+  var enableHomeScreenAnimation by remember { mutableStateOf(false) }
   var enableModelListAnimation by remember { mutableStateOf(true) }
   var lastNavigatedModelName = remember { "" }
 
@@ -189,64 +189,24 @@ fun GalleryNavHost(
   ) {
     // Home screen.
     composable(route = ROUTE_HOMESCREEN) {
-      // Create a state to trigger PromoScreen fade in animation.
-      val promoId = "gm4"
       Box(modifier = modifier.fillMaxSize()) {
-        var promoDismissed by remember { mutableStateOf(false) }
-
-        val homeScreenContent: @Composable () -> Unit = {
-          HomeScreen(
-            modelManagerViewModel = modelManagerViewModel,
-            tosViewModel = hiltViewModel(),
-            enableAnimation = enableHomeScreenAnimation,
-            navigateToTaskScreen = { task ->
-              pickedTask = task
-              enableModelListAnimation = true
-              navController.navigate(ROUTE_MODEL_LIST)
-              firebaseAnalytics?.logEvent(
-                GalleryEvent.CAPABILITY_SELECT.id,
-                Bundle().apply { putString("capability_name", task.id) },
-              )
-            },
-            onModelsClicked = { navController.navigate(ROUTE_MODEL_MANAGER) },
-            navigateToChatHistory = { navController.navigate(ROUTE_CHAT_HISTORY) },
-            gm4 = true,
-          )
-        }
-
-        // Show home page directly if promo has been viewed.
-        if (modelManagerViewModel.dataStoreRepository.hasViewedPromo(promoId = promoId)) {
-          homeScreenContent()
-        }
-        // If the promo has not been viewed, show promo screen first.
-        else {
-          AnimatedContent(
-            targetState = promoDismissed,
-            label = "PromoToHome",
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-          ) { dismissed ->
-            if (dismissed) {
-              homeScreenContent()
-            } else {
-              var startAnimation by remember { mutableStateOf(false) }
-              LaunchedEffect(Unit) {
-                delay(0L)
-                startAnimation = true
-              }
-              AnimatedVisibility(
-                visible = startAnimation,
-                enter = scaleIn(initialScale = 1.05f, animationSpec = tween(durationMillis = 1000)),
-              ) {
-                PromoScreenGm4(
-                  onDismiss = {
-                    modelManagerViewModel.dataStoreRepository.addViewedPromoId(promoId = promoId)
-                    promoDismissed = true
-                  }
-                )
-              }
-            }
-          }
-        }
+        HomeScreen(
+          modelManagerViewModel = modelManagerViewModel,
+          tosViewModel = hiltViewModel(),
+          enableAnimation = enableHomeScreenAnimation,
+          navigateToTaskScreen = { task ->
+            pickedTask = task
+            enableModelListAnimation = true
+            navController.navigate(ROUTE_MODEL_LIST)
+            firebaseAnalytics?.logEvent(
+              GalleryEvent.CAPABILITY_SELECT.id,
+              Bundle().apply { putString("capability_name", task.id) },
+            )
+          },
+          onModelsClicked = { navController.navigate(ROUTE_MODEL_MANAGER) },
+          navigateToChatHistory = { navController.navigate(ROUTE_CHAT_HISTORY) },
+          gm4 = true,
+        )
       }
     }
 
@@ -286,17 +246,23 @@ fun GalleryNavHost(
 
     // Model page.
     composable(
-      route = "$ROUTE_MODEL/{taskId}/{modelName}",
+      route = "$ROUTE_MODEL/{taskId}/{modelName}?conversationId={conversationId}",
       arguments =
         listOf(
           navArgument("taskId") { type = NavType.StringType },
           navArgument("modelName") { type = NavType.StringType },
+          navArgument("conversationId") { 
+    type = NavType.StringType
+    nullable = true
+    defaultValue = null 
+},
         ),
       enterTransition = { slideEnter() },
       exitTransition = { slideExit() },
     ) { backStackEntry ->
       val modelName = backStackEntry.arguments?.getString("modelName") ?: ""
       val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+      val conversationId = backStackEntry.arguments?.getString("conversationId")
       val scope = rememberCoroutineScope()
       val context = LocalContext.current
 
@@ -318,6 +284,7 @@ fun GalleryNavHost(
                     lastNavigatedModelName = ""
                     navController.navigateUp()
                   },
+                  conversationId = conversationId,
                 )
             )
           } else {
@@ -360,6 +327,7 @@ fun GalleryNavHost(
                     bottomPadding = bottomPadding,
                     setAppBarControlsDisabled = { disableAppBarControls = it },
                     setTopBarVisible = { hideTopBar = !it },
+                    conversationId = conversationId,
                     setCustomNavigateUpCallback = { customNavigateUpCallback = it },
                   )
               )
@@ -423,6 +391,8 @@ fun GalleryNavHost(
           enableHomeScreenAnimation = false
           navController.navigateUp()
         },
+        navController = navController,
+        modelManagerViewModel = modelManagerViewModel,
       )
     }
 

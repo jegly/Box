@@ -39,9 +39,11 @@ data class CustomTaskData(
   val setAppBarControlsDisabled: (Boolean) -> Unit = {},
   val setTopBarVisible: (Boolean) -> Unit = {},
   val setCustomNavigateUpCallback: ((() -> Unit)?) -> Unit = {},
+  val conversationId: String? = null,
 )
 
 data class CustomTaskDataForBuiltinTask(
   val modelManagerViewModel: ModelManagerViewModel,
   val onNavUp: () -> Unit,
+  val conversationId: String? = null,
 )

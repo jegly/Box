@@ -102,6 +102,7 @@ class LlmChatTask @Inject constructor() : CustomTask {
     LlmChatScreen(
       modelManagerViewModel = myData.modelManagerViewModel,
       navigateUp = myData.onNavUp,
+      conversationId = myData.conversationId,
       emptyStateComposable = {
         Box(modifier = Modifier.fillMaxSize()) {
           Column(

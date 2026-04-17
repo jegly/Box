@@ -107,6 +107,7 @@ fun ChatView(
   showAudioPicker: Boolean = false,
   emptyStateComposable: @Composable (Model) -> Unit = {},
   allowEditingSystemPrompt: Boolean = false,
+  conversationId: String? = null,
   curSystemPrompt: String = "",
   onSystemPromptChanged: (String) -> Unit = {},
   sendMessageTrigger: SendMessageTrigger? = null,
@@ -115,12 +116,44 @@ fun ChatView(
   val modelManagerUiState by modelManagerViewModel.uiState.collectAsState()
   val selectedModel = modelManagerUiState.selectedModel
 
+  val context = LocalContext.current
+
+  // Load conversation history: use explicit conversationId if provided, else auto-resume
+  // the most recent conversation for this model.
+  LaunchedEffect(conversationId, selectedModel.name) {
+    val llmViewModel = viewModel as? com.google.ai.edge.gallery.ui.llmchat.LlmChatViewModelBase
+      ?: return@LaunchedEffect
+    val existingMessages = llmViewModel.uiState.value.messagesByModel[selectedModel.name]
+    if (!existingMessages.isNullOrEmpty()) return@LaunchedEffect  // already loaded for this model
+
+    val convId = conversationId
+      ?: llmViewModel.getLatestConversationForModel(selectedModel.name)?.id
+
+    if (convId != null) {
+      Log.d(TAG, "Loading conversation history for: $convId (model=${selectedModel.name})")
+      val messages = llmViewModel.loadConversationHistory(convId)
+      Log.d(TAG, "Loaded ${messages?.size ?: 0} messages")
+      messages?.forEach { message ->
+        llmViewModel.addMessage(
+          selectedModel,
+          ChatMessageText(
+            content = message.content,
+            side = if (message.role == "user") ChatSide.USER else ChatSide.AGENT,
+            latencyMs = message.latencyMs.toFloat(),
+          ),
+        )
+      }
+      llmViewModel.setCurrentConversationId(convId)
+    } else {
+      Log.d(TAG, "No existing conversation for model ${selectedModel.name}, starting fresh")
+    }
+  }
+
   // Image viewer related.
   var selectedImageIndex by remember { mutableIntStateOf(-1) }
   var allImageViewerImages by remember { mutableStateOf<List<Bitmap>>(listOf()) }
   var showImageViewer by remember { mutableStateOf(false) }
 
-  val context = LocalContext.current
   val scope = rememberCoroutineScope()
   var navigatingUp by remember { mutableStateOf(false) }
 

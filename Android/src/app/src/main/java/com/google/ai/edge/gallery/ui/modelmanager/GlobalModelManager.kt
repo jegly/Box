@@ -142,8 +142,8 @@ fun GlobalModelManager(
         result.data?.data?.let { uri ->
           val fileName = getFileName(context = context, uri = uri)
           Log.d(TAG, "Selected file: $fileName")
-          // Show warning for model file types other than .task and .litertlm.
-          if (fileName != null && !fileName.endsWith(".task") && !fileName.endsWith(".litertlm")) {
+          // Show warning for model file types other than .task, .litertlm, and .gguf.
+          if (fileName != null && !fileName.endsWith(".task") && !fileName.endsWith(".litertlm") && !fileName.endsWith(".gguf", ignoreCase = true)) {
             showUnsupportedFileTypeDialog = true
           }
           // Show warning for web-only model (by checking if the file name has "-web" in it).
@@ -261,12 +261,15 @@ fun GlobalModelManager(
             enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 2 }) + expandVertically(),
             exit = fadeOut() + shrinkVertically(),
           ) {
+            // Gemma 4 banner removed for Box app
+            /*
             PromoBannerGm4(
               onDismiss = {
                 showPromo = false
                 viewModel.dataStoreRepository.addViewedPromoId(promoId = promoId)
               }
             )
+            */
           }
         }
 
@@ -465,7 +468,7 @@ fun GlobalModelManager(
       },
       onDismissRequest = { showUnsupportedFileTypeDialog = false },
       title = { Text("Unsupported file type") },
-      text = { Text("Only \".task\" or \".litertlm\" file type is supported.") },
+      text = { Text("Only \".task\", \".litertlm\", or \".gguf\" file types are supported.") },
       confirmButton = {
         Button(onClick = { showUnsupportedFileTypeDialog = false }) {
           Text(stringResource(R.string.ok))

@@ -33,17 +33,17 @@ android {
   compileSdk = 36
 
   defaultConfig {
-    applicationId = "com.google.aiedge.gallery"
+    applicationId = "com.box.gallery"
     minSdk = 35
     targetSdk = 36
     versionCode = 24
-    versionName = "2.0.0-box"
+    versionName = "1.0.11"
 
     // Needed for HuggingFace auth workflows.
     // Use the scheme of the "Redirect URLs" in HuggingFace app.
     manifestPlaceholders["appAuthRedirectScheme"] =
         "REPLACE_WITH_YOUR_REDIRECT_SCHEME_IN_HUGGINGFACE_APP"
-    manifestPlaceholders["applicationName"] = "com.google.ai.edge.gallery.GalleryApplication"
+    // No applicationName placeholder needed - AndroidManifest.xml directly references the class
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

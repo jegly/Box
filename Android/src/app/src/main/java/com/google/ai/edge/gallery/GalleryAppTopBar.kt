@@ -60,6 +60,9 @@ fun GalleryTopAppBar(
 ) {
   val titleColor = MaterialTheme.colorScheme.onSurface
   CenterAlignedTopAppBar(
+    colors = androidx.compose.material3.TopAppBarDefaults.centerAlignedTopAppBarColors(
+      containerColor = Color.Transparent
+    ),
     title = {
       Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Row(

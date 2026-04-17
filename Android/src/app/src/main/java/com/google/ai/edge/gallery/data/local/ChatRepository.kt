@@ -49,6 +49,9 @@ class ChatRepository @Inject constructor(
 
     suspend fun deleteAllConversations() = conversationDao.deleteAll()
 
+    suspend fun getLatestConversationForModel(modelName: String): Conversation? =
+        conversationDao.getLatestForModel(modelName)
+
     // --- Messages ---
 
     fun getMessagesForConversation(conversationId: String): Flow<List<Message>> =

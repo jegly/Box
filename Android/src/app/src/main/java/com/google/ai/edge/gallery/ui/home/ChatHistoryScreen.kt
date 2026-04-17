@@ -53,8 +53,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.google.ai.edge.gallery.data.local.entities.Conversation
 import com.google.ai.edge.gallery.data.local.entities.Message
+import com.google.ai.edge.gallery.ui.modelmanager.ModelManagerViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -63,6 +65,8 @@ import java.util.Locale
 @Composable
 fun ChatHistoryScreen(
     navigateUp: () -> Unit,
+    navController: NavController? = null,
+    modelManagerViewModel: ModelManagerViewModel? = null,
     viewModel: ChatHistoryViewModel = hiltViewModel(),
 ) {
     val conversations by viewModel.conversations.collectAsState()
@@ -181,6 +185,25 @@ fun ChatHistoryScreen(
                                 selectedConversation = conversation
                                 viewModel.loadMessages(conversation.id)
                             },
+                            onContinueChat = { conversation ->
+                                // Navigate back to chat with conversation loaded
+                                val (model, messages) = viewModel.continueChat(conversation)
+                                
+                                // Find the model in model manager and navigate to chat
+                                model?.let { chatModel ->
+                                    modelManagerViewModel?.getModelByName(name = chatModel.name)?.let { foundModel ->
+                                        // Select the model and navigate to the chat screen
+                                        modelManagerViewModel.selectModel(foundModel)
+                                        
+                                        // Find the LLM chat task
+                                        val llmTask = modelManagerViewModel.getCustomTaskByTaskId("llm_chat")
+                                        llmTask?.let { task ->
+                                            // Navigate with conversation ID to load history
+                                            navController?.navigate("route_model/${task.task.id}/${chatModel.name}?conversationId=${conversation.id}")
+                                        }
+                                    }
+                                }
+                            },
                         )
                     }
                 }
@@ -226,6 +249,7 @@ fun ChatHistoryScreen(
 private fun ConversationCard(
     conversation: Conversation,
     onClick: () -> Unit,
+    onContinueChat: (Conversation) -> Unit,
 ) {
     val dateFormat = remember { SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()) }
 
@@ -293,6 +317,21 @@ private fun ConversationCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 )
+                
+                // Continue Chat button
+                if (conversation.modelName.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    androidx.compose.material3.Button(
+                        onClick = { onContinueChat(conversation) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text("Continue Chat")
+                    }
+                }
             }
         }
     }

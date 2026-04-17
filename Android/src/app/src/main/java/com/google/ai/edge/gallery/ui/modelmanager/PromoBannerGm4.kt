@@ -94,7 +94,7 @@ fun PromoBannerGm4(onDismiss: () -> Unit, modifier: Modifier = Modifier) {
     ) {
       Text(text = "Gemma 4: now available", style = MaterialTheme.typography.titleMedium)
       Text(
-        "Built from the same world-class technology as Gemini 3, Gemma 4 brings frontier intelligence to your mobile and edge devices.",
+        "Gemma 4 brings frontier intelligence to your mobile and edge devices.",
         style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp, lineHeight = 15.sp),
         modifier = Modifier.padding(top = 4.dp),
       )

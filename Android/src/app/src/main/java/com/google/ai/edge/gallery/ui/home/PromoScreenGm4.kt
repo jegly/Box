@@ -59,7 +59,7 @@ fun PromoScreenGm4(onDismiss: () -> Unit) {
         .background(
           brush =
             Brush.verticalGradient(
-              colors = listOf(Color("#183570".toColorInt()), Color("#0A122D".toColorInt()))
+              colors = listOf(Color("#1A1A1A".toColorInt()), Color("#141414".toColorInt()))
             )
         ),
     contentAlignment = Alignment.Center,

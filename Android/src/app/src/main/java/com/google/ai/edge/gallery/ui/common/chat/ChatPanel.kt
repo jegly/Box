@@ -47,8 +47,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -128,6 +131,7 @@ fun ChatPanel(
   val streamingMessage = uiState.streamingMessagesByModel[selectedModel.name]
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
+  val clipboardManager = LocalClipboardManager.current
   val haptic = LocalHapticFeedback.current
   val imageCountToLastConfigChange =
     remember(messages) {
@@ -447,6 +451,16 @@ fun ChatPanel(
                       horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                       LatencyText(message = message)
+                      if (message is ChatMessageText && message.content.isNotEmpty() && !uiState.inProgress) {
+                        MessageActionButton(
+                          label = "Copy",
+                          icon = Icons.Outlined.ContentCopy,
+                          onClick = {
+                            clipboardManager.setText(AnnotatedString(message.content))
+                            scope.launch { snackbarHostState.showSnackbar("Copied") }
+                          },
+                        )
+                      }
                     }
                   } else if (message.side == ChatSide.USER) {
                     Row(

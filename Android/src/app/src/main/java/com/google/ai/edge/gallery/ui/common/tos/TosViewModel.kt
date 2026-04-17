@@ -25,9 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 open class TosViewModel @Inject constructor(private val dataStoreRepository: DataStoreRepository) :
   ViewModel() {
-  fun getIsTosAccepted(): Boolean {
-    return dataStoreRepository.isTosAccepted()
-  }
+  fun getIsTosAccepted(): Boolean { return true }
 
   fun acceptTos() {
     dataStoreRepository.acceptTos()

@@ -44,6 +44,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 private const val TAG = "AGLlmChatViewModel"
 
@@ -51,30 +53,87 @@ private const val TAG = "AGLlmChatViewModel"
 open class LlmChatViewModelBase() : ChatViewModel() {
 
   // Box: Chat persistence — will be injected by Hilt in concrete subclasses
-  var chatRepository: ChatRepository? = null
+  override lateinit var chatRepository: ChatRepository
   private var currentConversationId: String? = null
+  private val conversationMutex = Mutex()
+
+  /**
+   * Box: Set the current conversation ID for continuing an existing conversation
+   */
+  fun setCurrentConversationId(conversationId: String) {
+    currentConversationId = conversationId
+  }
+
+  /**
+   * Box: Look up the most recent conversation for a model (for auto-resume).
+   */
+  suspend fun getLatestConversationForModel(modelName: String): com.google.ai.edge.gallery.data.local.entities.Conversation? {
+    return try {
+      chatRepository.getLatestConversationForModel(modelName)
+    } catch (e: Exception) {
+      Log.e(TAG, "Failed to get latest conversation for model", e)
+      null
+    }
+  }
+
+  /**
+   * Box: Load conversation history for continuing a conversation
+   */
+  suspend fun loadConversationHistory(conversationId: String): List<com.google.ai.edge.gallery.data.local.entities.Message>? {
+    val repo = chatRepository ?: return null
+    return try {
+      repo.getMessagesSync(conversationId)
+    } catch (e: Exception) {
+      Log.e(TAG, "Failed to load conversation history", e)
+      null
+    }
+  }
 
   /**
    * Box: Persist a user message to the encrypted database.
    */
   private fun persistUserMessage(model: Model, content: String) {
     val repo = chatRepository ?: return
+    Log.d(TAG, "Attempting to persist user message for model: ${model.name}")
     viewModelScope.launch(Dispatchers.IO) {
       try {
-        val convId = currentConversationId ?: run {
-          val conv = repo.createConversation(
-            title = content.take(50),
-            taskType = "llm_chat",
-            modelName = model.name,
-          )
-          currentConversationId = conv.id
-          conv.id
+        // Use Mutex to ensure thread-safe conversation creation
+        conversationMutex.withLock {
+          // Get or create conversation ID
+          val convId = if (currentConversationId == null) {
+            Log.d(TAG, "Creating new conversation for model: ${model.name}")
+            val conv = repo.createConversation(
+              title = content.take(50),
+              taskType = "llm_chat",
+              modelName = model.name,
+            )
+            currentConversationId = conv.id
+            Log.d(TAG, "Created conversation with ID: ${conv.id}")
+            conv.id
+          } else {
+            currentConversationId!!
+          }
+          
+          // Now save the message with the guaranteed conversation ID
+          try {
+            repo.saveMessage(
+              conversationId = convId,
+              role = "user",
+              content = SecurityUtils.sanitizePrompt(content),
+            )
+            Log.d(TAG, "Successfully persisted user message to conversation: $convId")
+          } catch (fkException: android.database.sqlite.SQLiteConstraintException) {
+            Log.w(TAG, "Foreign key constraint failed, conversation might not be committed yet. Retrying...", fkException)
+            // Retry after a short delay to ensure conversation is committed
+            kotlinx.coroutines.delay(100)
+            repo.saveMessage(
+              conversationId = convId,
+              role = "user",
+              content = SecurityUtils.sanitizePrompt(content),
+            )
+            Log.d(TAG, "Successfully persisted user message to conversation on retry: $convId")
+          }
         }
-        repo.saveMessage(
-          conversationId = convId,
-          role = "user",
-          content = SecurityUtils.sanitizePrompt(content),
-        )
       } catch (e: Exception) {
         Log.e(TAG, "Failed to persist user message", e)
       }
@@ -86,15 +145,38 @@ open class LlmChatViewModelBase() : ChatViewModel() {
    */
   private fun persistAssistantMessage(model: Model, content: String, latencyMs: Long = 0) {
     val repo = chatRepository ?: return
-    val convId = currentConversationId ?: return
+    Log.d(TAG, "Attempting to persist assistant message for model: ${model.name}")
     viewModelScope.launch(Dispatchers.IO) {
       try {
-        repo.saveMessage(
-          conversationId = convId,
-          role = "assistant",
-          content = content,
-          latencyMs = latencyMs,
-        )
+        // Use Mutex to ensure thread-safe message saving
+        conversationMutex.withLock {
+          val convId = currentConversationId
+          if (convId == null) {
+            Log.w(TAG, "No conversation ID available for assistant message, skipping persistence")
+            return@withLock
+          }
+          
+          try {
+            repo.saveMessage(
+              conversationId = convId,
+              role = "assistant",
+              content = content,
+              latencyMs = latencyMs,
+            )
+            Log.d(TAG, "Successfully persisted assistant message to conversation: $convId")
+          } catch (fkException: android.database.sqlite.SQLiteConstraintException) {
+            Log.w(TAG, "Foreign key constraint failed for assistant message, conversation might not be committed yet. Retrying...", fkException)
+            // Retry after a short delay to ensure conversation is committed
+            kotlinx.coroutines.delay(100)
+            repo.saveMessage(
+              conversationId = convId,
+              role = "assistant",
+              content = content,
+              latencyMs = latencyMs,
+            )
+            Log.d(TAG, "Successfully persisted assistant message to conversation on retry: $convId")
+          }
+        }
       } catch (e: Exception) {
         Log.e(TAG, "Failed to persist assistant message", e)
       }

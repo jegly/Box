@@ -359,7 +359,7 @@ fun HomeScreen(
         gesturesEnabled = drawerState.isOpen,
       ) {
         Scaffold(
-          containerColor = MaterialTheme.colorScheme.background,
+          containerColor = Color.Black, // Black background
           topBar = {
             // Top bar animation:
             //
@@ -380,7 +380,7 @@ fun HomeScreen(
                 }
             ) {
               GalleryTopAppBar(
-                title = stringResource(HomeScreenDestination.titleRes),
+                title = "",
                 leftAction =
                   AppBarAction(
                     actionType = AppBarActionType.MENU,
@@ -398,11 +398,14 @@ fun HomeScreen(
             modifier =
               Modifier.fillMaxSize()
                 .background(
-                  if (gm4) {
-                    MaterialTheme.colorScheme.surface
-                  } else {
-                    MaterialTheme.colorScheme.surfaceContainer
-                  }
+                  Brush.radialGradient(
+                    colors = listOf(
+                      Color(0xFF1A1A1A), // Dark grey center
+                      Color(0xFF141414), // Medium dark grey mid
+                      Color.Black // Black edges
+                    ),
+                    radius = 2000f
+                  )
                 ),
           ) {
             // Inner box to hold content.
@@ -410,11 +413,21 @@ fun HomeScreen(
               contentAlignment = Alignment.TopCenter,
               modifier =
                 Modifier.fillMaxSize()
+                  .background(
+                    Brush.radialGradient(
+                      colors = listOf(
+                        Color(0xFF1A1A1A), // Dark grey center
+                        Color(0xFF141414), // Medium dark grey mid
+                        Color.Black // Black edges
+                      ),
+                      radius = 2000f
+                    )
+                  )
                   .padding(top = innerPadding.calculateTopPadding())
                   .verticalScroll(rememberScrollState()),
             ) {
-              // Background star at top.
-              if (gm4) {
+              // Background star at top - disabled
+              if (false) {
                 val progress =
                   if (!enableAnimation) {
                     1f
@@ -449,7 +462,7 @@ fun HomeScreen(
               Column(modifier = Modifier.fillMaxWidth()) {
                 var selectedCategoryIndex by remember { mutableIntStateOf(0) }
 
-                // App title and intro text.
+                // App intro text (Title removed as per request).
                 Column(
                   modifier =
                     Modifier.padding(
@@ -460,11 +473,6 @@ fun HomeScreen(
                       .semantics(mergeDescendants = true) {},
                   verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                  if (gm4) {
-                    AppTitleGm4(enableAnimation = enableAnimation)
-                  } else {
-                    AppTitle(enableAnimation = enableAnimation)
-                  }
                   IntroText(enableAnimation = enableAnimation, gm4 = gm4)
                   if (gm4) {
                     TryGm4IntroText(enableAnimation = enableAnimation)
@@ -509,19 +517,7 @@ fun HomeScreen(
               }
             }
 
-            // Gradient overlay at the bottom.
-            Box(
-              modifier =
-                Modifier.fillMaxWidth()
-                  .height(innerPadding.calculateBottomPadding())
-                  .background(
-                    Brush.verticalGradient(
-                      colors = listOf(Color.Transparent, MaterialTheme.colorScheme.surfaceContainer)
-                    )
-                  )
-                  .align(Alignment.BottomCenter)
-            )
-          }
+                      }
         }
       }
     }
@@ -648,27 +644,7 @@ private fun AppTitle(enableAnimation: Boolean) {
 
 @Composable
 fun AppTitleGm4(enableAnimation: Boolean) {
-  val text1 = "Google"
-  val text2 = "AI Edge Gallery"
-  val annotatedText = buildAnnotatedString {
-    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) { append(text1) }
-    append(" ")
-    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) { append(text2) }
-  }
-
-  RevealingText(
-    text = "",
-    annotatedText = annotatedText,
-    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Medium),
-    animationDelay = 0,
-    animationDurationMs =
-      if (enableAnimation) {
-        (TITLE_FIRST_LINE_ANIMATION_DURATION + TITLE_SECOND_LINE_ANIMATION_DURATION)
-      } else {
-        0
-      },
-    extraTextPadding = 0.dp,
-  )
+  // Box app - removed title
 }
 
 @Composable
@@ -690,22 +666,7 @@ private fun IntroText(enableAnimation: Boolean, gm4: Boolean) {
     }
 
   val introText = buildAnnotatedString {
-    val gemma4Url = "https://ai.google.dev/gemma"
-    if (gm4) {
-      append("Discover the power of on-device AI models from the ")
-      append(buildTrackableUrlAnnotatedString(url = litertUrl, linkText = "LiteRT community"))
-      append(", featuring the all-new ")
-      append(buildTrackableUrlAnnotatedString(url = gemma4Url, linkText = "Gemma 4"))
-      append(".")
-    } else {
-      append("${stringResource(R.string.app_intro)} ")
-      append(
-        buildTrackableUrlAnnotatedString(
-          url = litertUrl,
-          linkText = stringResource(R.string.litert_community_label),
-        )
-      )
-    }
+    // Box app - removed promotional text
   }
   Text(
     introText,
@@ -720,53 +681,7 @@ private fun IntroText(enableAnimation: Boolean, gm4: Boolean) {
 
 @Composable
 private fun TryGm4IntroText(enableAnimation: Boolean) {
-  // fade in + slide up.
-  val progress =
-    if (!enableAnimation) {
-      1f
-    } else {
-      rememberDelayedAnimationProgress(
-        initialDelay = TITLE_SECOND_LINE_ANIMATION_START,
-        animationDurationMs = CONTENT_COMPOSABLES_ANIMATION_DURATION,
-        animationLabel = "intro text animation",
-      )
-    }
-  Row(
-    modifier =
-      Modifier.padding(top = 24.dp).graphicsLayer {
-        alpha = progress
-        translationY = (CONTENT_COMPOSABLES_OFFSET_Y.dp * (1 - progress)).toPx()
-      },
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
-  ) {
-    Icon(
-      ImageVector.vectorResource(R.drawable.gemma_logo),
-      contentDescription = null,
-      modifier = Modifier.size(24.dp),
-      tint = MaterialTheme.colorScheme.primary,
-    )
-    Text(
-      text = "Try Gemma 4 today",
-      style =
-        MaterialTheme.typography.headlineSmall.copy(
-          fontWeight = FontWeight.Medium,
-          fontSize = 20.sp,
-          lineHeight = 24.sp,
-        ),
-      color = MaterialTheme.colorScheme.onSurface,
-    )
-  }
-
-  Text(
-    "Gemma 4 E2B & E4B are here! Try them in AI Chat, Agent Skills, or the use cases below.",
-    style = MaterialTheme.typography.bodyMedium,
-    modifier =
-      Modifier.graphicsLayer {
-        alpha = progress
-        translationY = (CONTENT_COMPOSABLES_OFFSET_Y.dp * (1 - progress)).toPx()
-      },
-  )
+  // Placeholder for Box app
 }
 
 @Composable
@@ -909,18 +824,7 @@ private fun TaskList(
         )
       }
 
-      Text(
-        text = "Explore other use cases",
-        style =
-          MaterialTheme.typography.headlineSmall.copy(
-            fontWeight = FontWeight.Medium,
-            fontSize = 20.sp,
-            lineHeight = 24.sp,
-          ),
-        color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier.padding(top = 22.dp, bottom = 16.dp),
-      )
-    }
+          }
   }
 
   HorizontalPager(
@@ -1124,23 +1028,7 @@ private fun TaskCard(
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium,
               )
-              if (task.newFeature) {
-                Box(
-                  modifier =
-                    Modifier.offset(y = (-6).dp, x = 6.dp)
-                      .clip(RoundedCornerShape(8.dp))
-                      .background(MaterialTheme.customColors.newFeatureContainerColor)
-                      .padding(horizontal = 12.dp)
-                      .height(26.dp),
-                  contentAlignment = Alignment.Center,
-                ) {
-                  Text(
-                    "New",
-                    color = MaterialTheme.customColors.newFeatureTextColor,
-                    style = MaterialTheme.typography.labelLarge,
-                  )
-                }
-              }
+              // Removed "New" badge from agentic skills features
             }
             Text(
               description,

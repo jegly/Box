@@ -8,53 +8,53 @@
     <!-- Top face (lightest) -->
     <path
         android:fillColor="#E0E0E0"
-        android:pathData="M54,20 L78,35 L54,50 L30,35 Z" />
+        android:pathData="M54,25 L78,40 L54,55 L30,40 Z" />
     
     <!-- Left face (medium) -->
     <path
         android:fillColor="#B0B0B0"
-        android:pathData="M30,35 L30,65 L54,80 L54,50 Z" />
+        android:pathData="M30,40 L30,70 L54,85 L54,55 Z" />
     
     <!-- Right face (dark) -->
     <path
         android:fillColor="#808080"
-        android:pathData="M54,50 L54,80 L78,65 L78,35 Z" />
+        android:pathData="M54,55 L54,85 L78,70 L78,40 Z" />
     
     <!-- Top face depth lines for 3D effect -->
     <path
         android:fillColor="#F0F0F0"
-        android:pathData="M54,25 L73,37 L54,49 L35,37 Z" />
+        android:pathData="M54,30 L73,42 L54,54 L35,42 Z" />
     
     <!-- Left face depth lines -->
     <path
         android:fillColor="#909090"
-        android:pathData="M35,40 L35,60 L54,72 L54,52 Z" />
+        android:pathData="M35,45 L35,65 L54,77 L54,57 Z" />
     
     <!-- Right face depth lines -->
     <path
         android:fillColor="#606060"
-        android:pathData="M54,52 L54,72 L73,60 L73,40 Z" />
+        android:pathData="M54,57 L54,77 L73,65 L73,45 Z" />
     
     <!-- Highlight edges for extra depth -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,20 L54,25 L35,37 L30,35 Z" />
+        android:pathData="M54,25 L54,30 L35,42 L30,40 Z" />
     
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,20 L54,25 L73,37 L78,35 Z" />
+        android:pathData="M54,25 L54,30 L73,42 L78,40 Z" />
     
     <!-- Shadow edges -->
     <path
         android:fillColor="#404040"
-        android:pathData="M30,65 L35,60 L35,40 L30,35 Z" />
+        android:pathData="M30,70 L35,65 L35,45 L30,40 Z" />
     
     <path
         android:fillColor="#404040"
-        android:pathData="M78,35 L73,40 L73,60 L78,65 Z" />
+        android:pathData="M78,40 L73,45 L73,65 L78,70 Z" />
     
     <!-- Bottom shadow -->
     <path
         android:fillColor="#303030"
-        android:pathData="M35,60 L54,72 L73,60 L54,48 Z" />
+        android:pathData="M35,65 L54,77 L73,65 L54,53 Z" />
 </vector>

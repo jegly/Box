@@ -173,7 +173,6 @@ private val PREDEFINED_LLM_TASK_ORDER =
     BuiltInTaskId.LLM_CHAT,
     BuiltInTaskId.LLM_AGENT_CHAT,
     BuiltInTaskId.LLM_PROMPT_LAB,
-    BuiltInTaskId.LLM_TINY_GARDEN,
     BuiltInTaskId.LLM_MOBILE_ACTIONS,
   )
 
@@ -617,7 +616,6 @@ constructor(
         BuiltInTaskId.LLM_ASK_IMAGE,
         BuiltInTaskId.LLM_ASK_AUDIO,
         BuiltInTaskId.LLM_PROMPT_LAB,
-        BuiltInTaskId.LLM_TINY_GARDEN,
         BuiltInTaskId.LLM_MOBILE_ACTIONS,
         BuiltInTaskId.LLM_AGENT_CHAT,
       )
@@ -631,20 +629,13 @@ constructor(
       if (
         (task.id == BuiltInTaskId.LLM_ASK_IMAGE && model.llmSupportImage) ||
           (task.id == BuiltInTaskId.LLM_ASK_AUDIO && model.llmSupportAudio) ||
-          (task.id == BuiltInTaskId.LLM_TINY_GARDEN && model.llmSupportTinyGarden) ||
           (task.id == BuiltInTaskId.LLM_MOBILE_ACTIONS && model.llmSupportMobileActions) ||
           (task.id != BuiltInTaskId.LLM_ASK_IMAGE &&
             task.id != BuiltInTaskId.LLM_ASK_AUDIO &&
-            task.id != BuiltInTaskId.LLM_TINY_GARDEN &&
             task.id != BuiltInTaskId.LLM_MOBILE_ACTIONS)
       ) {
         task.models.add(model)
-        if (task.id == BuiltInTaskId.LLM_TINY_GARDEN) {
-          val newConfigs = model.configs.toMutableList()
-          newConfigs.add(RESET_CONVERSATION_TURN_COUNT_CONFIG)
-          model.configs = newConfigs
-          model.preProcess()
-        }
+        model.preProcess()
       }
       task.updateTrigger.value = System.currentTimeMillis()
     }
@@ -893,25 +884,36 @@ constructor(
         }
 
         if (modelAllowlist == null) {
-          // Load from github.
-          var version = BuildConfig.VERSION_NAME.replace(".", "_")
-          val url = getAllowlistUrl(version)
-          Log.d(TAG, "Loading model allowlist from internet. Url: $url")
-          val data = getJsonResponse<ModelAllowlist>(url = url)
-          modelAllowlist = data?.jsonObj
-
+          // Try to load from disk first (faster for offline use)
+          Log.d(TAG, "Loading model allowlist from disk first")
+          modelAllowlist = readModelAllowlistFromDisk()
+          
           if (modelAllowlist == null) {
-            Log.w(TAG, "Failed to load model allowlist from internet. Trying to load it from disk")
-            modelAllowlist = readModelAllowlistFromDisk()
-          } else {
-            Log.d(TAG, "Done: loading model allowlist from internet")
-            saveModelAllowlistToDisk(modelAllowlistContent = data?.textContent ?: "{}")
+            Log.w(TAG, "Failed to load model allowlist from disk. Trying to load it from assets")
+            modelAllowlist = readModelAllowlistFromAssets()
+          }
+          
+          if (modelAllowlist == null) {
+            // Only try internet if local sources fail
+            var version = BuildConfig.VERSION_NAME.replace(".", "_")
+            val url = getAllowlistUrl(version)
+            Log.d(TAG, "Loading model allowlist from internet. Url: $url")
+            val data = getJsonResponse<ModelAllowlist>(url = url)
+            modelAllowlist = data?.jsonObj
+            
+            if (modelAllowlist != null) {
+              Log.d(TAG, "Done: loading model allowlist from internet")
+              saveModelAllowlistToDisk(modelAllowlistContent = data?.textContent ?: "{}")
+            }
           }
         }
 
         if (modelAllowlist == null) {
           _uiState.update {
-            uiState.value.copy(loadingModelAllowlistError = "Failed to load model list")
+            uiState.value.copy(
+              loadingModelAllowlist = false,
+              loadingModelAllowlistError = "Failed to load model list"
+            )
           }
           return@launch
         }
@@ -1007,6 +1009,12 @@ constructor(
         checkAICoreModelStatuses()
       } catch (e: Exception) {
         e.printStackTrace()
+        _uiState.update {
+          uiState.value.copy(
+            loadingModelAllowlist = false,
+            loadingModelAllowlistError = "An unexpected error occurred while loading model list"
+          )
+        }
       }
     }
   }
@@ -1061,6 +1069,19 @@ constructor(
     }
 
     return null
+  }
+
+  private fun readModelAllowlistFromAssets(): ModelAllowlist? {
+    try {
+      Log.d(TAG, "Reading model allowlist from assets...")
+      val content = context.assets.open(MODEL_ALLOWLIST_FILENAME).bufferedReader().use { it.readText() }
+      Log.d(TAG, "Model allowlist content from assets: $content")
+      val gson = Gson()
+      return gson.fromJson(content, ModelAllowlist::class.java)
+    } catch (e: Exception) {
+      Log.e(TAG, "failed to read model allowlist from assets", e)
+      return null
+    }
   }
 
   private fun isModelPartiallyDownloaded(model: Model): Boolean {
@@ -1119,14 +1140,7 @@ constructor(
       if (model.llmSupportAudio) {
         tasks.get(key = BuiltInTaskId.LLM_ASK_AUDIO)?.models?.add(model)
       }
-      if (model.llmSupportTinyGarden) {
-        tasks.get(key = BuiltInTaskId.LLM_TINY_GARDEN)?.models?.add(model)
-        val newConfigs = model.configs.toMutableList()
-        newConfigs.add(RESET_CONVERSATION_TURN_COUNT_CONFIG)
-        model.configs = newConfigs
-        model.preProcess()
-      }
-      if (model.llmSupportMobileActions) {
+            if (model.llmSupportMobileActions) {
         tasks.get(key = BuiltInTaskId.LLM_MOBILE_ACTIONS)?.models?.add(model)
       }
 

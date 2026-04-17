@@ -1,87 +1,141 @@
-# Google AI Edge Gallery ✨
+# Box — Hybrid LiteRT / Llama.cpp support.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/google-ai-edge/gallery)](https://github.com/google-ai-edge/gallery/releases)
+[![Upstream](https://img.shields.io/badge/upstream-google--ai--edge%2Fgallery-brightgreen)](https://github.com/google-ai-edge/gallery)
 
-**Explore, Experience, and Evaluate the Future of On-Device Generative AI with Google AI Edge.**
+**A security-hardened fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery) — with biometric lock, encrypted chat history, llama.cpp support, and GGUF model import.**
 
-AI Edge Gallery is the premier destination for running the world's most powerful open-source Large Language Models (LLMs) on your mobile device. Experience high-performance Generative AI directly on your hardware—fully offline, private, and lightning-fast.
+> **Repository:** [github.com/jegly/box](https://github.com/jegly/box)
 
-**Now Featuring: Gemma 4**
+---
 
-The latest version brings official support for the newly released Gemma 4 family. As the centerpiece of this release, Gemma 4 allows you to test the cutting edge of on-device AI. Experience advanced reasoning, logic, and creative capabilities without ever sending your data to a server.
+## What is Box?
 
+Box is an Android app for running large language models entirely on-device. It inherits the full feature set of the upstream Google AI Edge Gallery and adds a security-focused layer on top: your conversations are encrypted at rest, the app can lock behind biometrics, and a hard offline mode blocks all network traffic on demand.
 
-| **Install the app today from Google Play** | **Install the app today from App Store** |
-| :--- | :--- |
-| <a href='https://play.google.com/store/apps/details?id=com.google.ai.edge.gallery'><img alt='Get it on Google Play' height="120" src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'/></a> | <a href="https://apps.apple.com/us/app/google-ai-edge-gallery/id6749645337?itscg=30200&itsct=apps_box_badge&mttnsubad=6749645337" style="display: inline-block;"> <img src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1771977600" alt="Download on the App Store" style="width: 246px; height: 90px; vertical-align: middle; object-fit: contain;" /></a> |
+On the inference side, Box integrates llama.cpp alongside the upstream LiteRT runtime. This lets you sideload any GGUF model file and choose between CPU, GPU, or NPU acceleration per model — so you are not limited to the curated model list.
 
-For users without Google Play access, install the apk from the [**latest release**](https://github.com/google-ai-edge/gallery/releases/latest/)
+---
 
+## What's different from upstream
 
-## App Preview
+| Area | Upstream (Google AI Edge Gallery) | Box |
+|---|---|---|
+| Chat history | In-memory only (lost on close) | Persisted to SQLCipher-encrypted Room DB |
+| App lock | None | Optional biometric lock (fingerprint / face) on foreground |
+| Offline mode | Always online | Hard offline switch — blocks all network requests |
+| Inference engine | LiteRT only | LiteRT + llama.cpp |
+| Model import | Download from allowlist | Import local GGUF files |
+| Accelerator | Per-model default | User-selectable CPU / GPU / NPU at import time |
+| Security audit log | None | On-device log of security-relevant events |
+| Prompt sanitisation | None | Input sanitised before inference and persistence |
+| Chat resume | None | Conversations resume where you left off |
 
-<img width="480" alt="01" src="https://github.com/user-attachments/assets/a809ad78-aef4-4169-91ee-de7213cbb3bd" />
-<img width="480" alt="02" src="https://github.com/user-attachments/assets/1effd10d-f45a-4f7b-9435-f50f1bdd36b6" />
-<img width="480" alt="03" src="https://github.com/user-attachments/assets/e5089e41-2c18-4fbe-9011-ebe9e5a02044" />
-<img width="480" alt="04" src="https://github.com/user-attachments/assets/0f39d3ed-7403-4606-a7c6-b2c7e51ba6c1" />
-<img width="480" alt="05" src="https://github.com/user-attachments/assets/8c229e96-b598-4735-9f60-e96907e1d5d5" />
-<img width="480" alt="06" src="https://github.com/user-attachments/assets/ac9fb77b-81de-4197-9ed3-f6fe58290b3e" />
-<img width="480" alt="07" src="https://github.com/user-attachments/assets/bc86ba07-2eaf-49b1-980f-8a87a85c596f" />
-<img width="480" alt="08" src="https://github.com/user-attachments/assets/061564ed-030f-4630-810b-13a7863fce4c" />
+---
 
-## ✨ Core Features
+## Core Features
 
-* **Agent Skills**: Transform your LLM from a conversationalist into a proactive assistant. Use the Agent Skills tile to augment model capabilities with tools like Wikipedia for fact-grounding, interactive maps, and rich visual summary cards. You can even load modular skills from a URL or browse community contributions on GitHub Discussions.
+**Biometric App Lock**
+Enable an optional biometric lock from Settings. The app re-locks automatically every time it is backgrounded. Unlock via fingerprint or face authentication before any content is shown.
 
-* **AI Chat with Thinking Mode**: Engage in fluid, multi-turn conversations and toggle the new Thinking Mode to peek "under the hood." This feature allows you to see the model’s step-by-step reasoning process, which is perfect for understanding complex problem-solving. Note: Thinking Mode currently works with supported models, starting with the Gemma 4 family.
+**Encrypted Chat History**
+All conversations are stored in a SQLCipher-encrypted Room database. History persists across sessions and is resumable from the Chat History screen in the drawer. Swipe to delete individual conversations, or delete all at once.
 
-* **Ask Image**: Use multimodal power to identify objects, solve visual puzzles, or get detailed descriptions using your device’s camera or photo gallery.
+**llama.cpp Engine**
+Runs GGUF models natively via a bundled llama.cpp submodule. Supports the full range of quantised model formats (Q4_K_M, Q5_K_M, Q8_0, F16, etc.).
 
-* **Audio Scribe**: Transcribe and translate voice recordings into text in real-time using high-efficiency on-device language models.
+**GGUF Model Import**
+Import any GGUF model file from local storage. At import time you can set the display name and choose the accelerator (CPU, GPU via OpenCL/Vulkan, or NPU via QNN delegate).
 
-* **Prompt Lab**: A dedicated workspace to test different prompts and single-turn use cases with granular control over model parameters like temperature and top-k.
+**Accelerator Selection**
+Each model can run on CPU, GPU, or NPU independently. The choice is stored per model and used for every inference session.
 
-* **Mobile Actions**: Unlock offline device controls and automated tasks powered entirely by a finetune of FuntionGemma 270m.
+**Hard Offline Mode**
+A toggle in Settings forces the app into a fully airgapped state — all download attempts throw an exception and no network calls are made. Useful in sensitive environments.
 
-* **Tiny Garden**: A fun, experimental mini-game that uses natural language to plant and harvest a virtual garden using a finetune of FunctionGemma 270m.
+**AI Chat** (from upstream)
+Multi-turn conversations with on-device LLMs. Supports Thinking Mode on compatible models (Gemma 4 family). Full markdown rendering of responses.
 
-* **Model Management & Benchmark**: Gallery is a flexible sandbox for a wide variety of open-source models. Easily download models from the list or load your own custom models. Manage your model library effortlessly and run benchmark tests to understand exactly how each model performs on your specific hardware.
+**Ask Image / Audio Scribe** (from upstream)
+Multimodal image Q&A and audio transcription using on-device models.
 
-* **100% On-Device Privacy**: All model inferences happen directly on your device hardware. No internet is required, ensuring total privacy for your prompts, images, and sensitive data.
+**Agent Skills** (from upstream)
+Augment the model with tool use: Wikipedia, maps, visual cards, and community-contributed skill packs loadable from a URL.
 
-## 🏁 Get Started in Minutes!
+**Prompt Lab** (from upstream)
+Single-turn prompt sandbox with temperature, top-k, and other parameter controls.
 
-1. **Check OS Requirement**: Android 12 and up, and iOS 17 and up.
-2.  **Download the App:**
-    - Install the app from [Google Play](https://play.google.com/store/apps/details?id=com.google.ai.edge.gallery) or [App Store](https://apps.apple.com/us/app/google-ai-edge-gallery/id6749645337).
-    - For users without Google Play access: install the apk from the [**latest release**](https://github.com/google-ai-edge/gallery/releases/latest/)
-3.  **Install & Explore:** For detailed installation instructions (including for corporate devices) and a full user guide, head over to our [**Project Wiki**](https://github.com/google-ai-edge/gallery/wiki)!
+---
 
-## 🛠️ Technology Highlights
+## Getting Started
 
-*   **Google AI Edge:** Core APIs and tools for on-device ML.
-*   **LiteRT:** Lightweight runtime for optimized model execution.
-*   **Hugging Face Integration:** For model discovery and download.
+### Requirements
 
-## ⌨️ Development
+- Android 12 (API 32) or higher
+- ~4 GB of free storage for a typical quantised LLM
 
-Check out the [development notes](DEVELOPMENT.md) for instructions about how to build the app locally.
+### Build from source
 
-## 🤝 Feedback
+```bash
+git clone --recurse-submodules https://github.com/jegly/box
+cd box/Android
+./gradlew :app:assembleDebug
+```
 
-This is an **experimental Beta release**, and your input is crucial!
+The `--recurse-submodules` flag is required to pull the llama.cpp submodule.
 
-*   🐞 **Found a bug?** [Report it here!](https://github.com/google-ai-edge/gallery/issues/new?assignees=&labels=bug&template=bug_report.md&title=%5BBUG%5D)
-*   💡 **Have an idea?** [Suggest a feature!](https://github.com/google-ai-edge/gallery/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=%5BFEATURE%5D)
+Open `Android/` in Android Studio (Ladybug or newer) and run on a physical device for best performance.
 
-## 📄 License
+### Loading a GGUF model
+
+1. Copy a `.gguf` file to your device (Downloads folder, USB, etc.)
+2. Open the app and tap **Model Manager** in the drawer
+3. Tap **Import** and pick your file
+4. Set a display name and choose CPU / GPU / NPU
+5. Tap **Import** — the model appears in the AI Chat task
+
+---
+
+## Security Architecture
+
+| Mechanism | Details |
+|---|---|
+| Database encryption | SQLCipher via `androidx.room` — AES-256 at rest |
+| Biometric gate | `BiometricPrompt` API, re-prompts on each foreground |
+| Offline mode | `OfflineMode` singleton blocks `DownloadWorker` and `OkHttp` calls |
+| Prompt sanitisation | `SecurityUtils.sanitizePrompt()` strips control characters before inference and persistence |
+| Tapjacking protection | `filterTouchesWhenObscured` set on the chat scaffold |
+| Audit log | `SecurityAuditLog` writes security events to a local append-only log |
+
+---
+
+## Technology Stack
+
+- **Kotlin + Jetpack Compose** — UI
+- **Hilt** — dependency injection
+- **Room + SQLCipher** — encrypted persistence
+- **LiteRT (TFLite)** — upstream inference runtime
+- **llama.cpp** — GGUF inference (bundled as a git submodule)
+- **Firebase Analytics** — anonymous usage stats (can be disabled via Offline Mode)
+
+---
+
+## Upstream
+
+This project is a fork of [google-ai-edge/gallery](https://github.com/google-ai-edge/gallery). Upstream improvements are periodically merged. The upstream app is available on [Google Play](https://play.google.com/store/apps/details?id=com.google.ai.edge.gallery) and the [App Store](https://apps.apple.com/us/app/google-ai-edge-gallery/id6749645337).
+
+---
+
+## License
 
 Licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details.
 
-## 🔗 Useful Links
+---
 
-*   [**Project Wiki (Detailed Guides)**](https://github.com/google-ai-edge/gallery/wiki)
-*   [Hugging Face LiteRT Community](https://huggingface.co/litert-community)
-*   [LiteRT-LM](https://github.com/google-ai-edge/LiteRT-LM)
-*   [Google AI Edge Documentation](https://ai.google.dev/edge)
+## Links
+
+- [Box repository](https://github.com/jegly/box)
+- [Upstream: google-ai-edge/gallery](https://github.com/google-ai-edge/gallery)
+- [llama.cpp](https://github.com/ggml-org/llama.cpp)
+- [LiteRT-LM](https://github.com/google-ai-edge/LiteRT-LM)
+- [Hugging Face LiteRT Community](https://huggingface.co/litert-community)

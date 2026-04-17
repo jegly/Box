@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.ai.edge.gallery
+package com.box.gallery
 
 import android.animation.ObjectAnimator
 import android.content.Intent
@@ -50,10 +50,12 @@ import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
+import com.google.ai.edge.gallery.security.AppLockManager
 import com.google.ai.edge.gallery.security.BiometricHelper
 import com.google.ai.edge.gallery.security.SecurityAuditLog
 import com.google.ai.edge.gallery.ui.modelmanager.ModelManagerViewModel
 import com.google.ai.edge.gallery.ui.theme.GalleryTheme
+import com.google.ai.edge.gallery.GalleryApp
 import com.google.ai.edge.litertlm.ExperimentalApi
 import com.google.ai.edge.litertlm.ExperimentalFlags
 import dagger.hilt.android.AndroidEntryPoint
@@ -64,7 +66,6 @@ import kotlinx.coroutines.launch
 class MainActivity : FragmentActivity() {
 
   private val modelManagerViewModel: ModelManagerViewModel by viewModels()
-  private var splashScreenAboutToExit: Boolean = false
   private var contentSet: Boolean = false
   private var isAuthenticated: Boolean = false
   private lateinit var biometricHelper: BiometricHelper
@@ -78,8 +79,9 @@ class MainActivity : FragmentActivity() {
       WindowManager.LayoutParams.FLAG_SECURE
     )
 
-    // Box: Initialize biometric authentication
+    // Box: Initialize biometric authentication and app lock
     biometricHelper = BiometricHelper(this)
+    AppLockManager.init(this)
 
     SecurityAuditLog.log(this, "APP_LAUNCHED")
 
@@ -110,21 +112,6 @@ class MainActivity : FragmentActivity() {
         GalleryTheme {
           Surface(modifier = Modifier.fillMaxSize()) {
             GalleryApp(modelManagerViewModel = modelManagerViewModel)
-
-            // Fade out a "mask" that has the same color as the background of the splash screen
-            // to reveal the actual app content.
-            var startMaskFadeout by remember { mutableStateOf(false) }
-            LaunchedEffect(Unit) { startMaskFadeout = true }
-            AnimatedVisibility(
-              !startMaskFadeout,
-              enter = fadeIn(animationSpec = snap(0)),
-              exit =
-                fadeOut(animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)),
-            ) {
-              Box(
-                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
-              )
-            }
           }
         }
       }
@@ -137,51 +124,9 @@ class MainActivity : FragmentActivity() {
 
     modelManagerViewModel.loadModelAllowlist()
 
-    // Show splash screen.
+    // Disable the system splash screen's custom exit animation and just show content.
     val splashScreen = installSplashScreen()
-
-    // Set the content when the system-provided splash screen is not shown.
-    //
-    // This is necessary on some Android versions where the splash screen is optimized away (e.g.,
-    // after a force-quit) to ensure the main content is displayed immediately and correctly.
-    lifecycleScope.launch {
-      delay(1000)
-      if (!splashScreenAboutToExit) {
-        setContent()
-      }
-    }
-
-    // Cross-fade transition from the splash screen to the main content.
-    //
-    // The logic performs the following key actions:
-    // 1. Synchronizes Timing: It calculates the remaining duration of the default icon
-    //    animation. It then delays its own animations to ensure the custom fade-out begins just
-    //    before the original icon animation would have finished.
-    // 2. Initiates a cross-fade:
-    //    - Fade out the splash screen.
-    //    - Fade in the main content.
-    // 3. Cleans up: An `onEnd` listener on the fade-out animator calls
-    //    `splashScreenView.remove()` to properly remove the splash screen from the view hierarchy
-    //    once it's fully transparent.
-    splashScreen.setOnExitAnimationListener { splashScreenView ->
-      splashScreenAboutToExit = true
-
-      val now = System.currentTimeMillis()
-      val iconAnimationStartMs = splashScreenView.iconAnimationStartMillis
-      val duration = splashScreenView.iconAnimationDurationMillis
-      val fadeOut = ObjectAnimator.ofFloat(splashScreenView.view, View.ALPHA, 1f, 0f)
-      fadeOut.interpolator = DecelerateInterpolator()
-      fadeOut.duration = 300L
-      fadeOut.doOnEnd { splashScreenView.remove() }
-      lifecycleScope.launch {
-        val setContentDelay = duration - (now - iconAnimationStartMs) - 300
-        if (setContentDelay > 0) {
-          delay(setContentDelay)
-        }
-        setContent()
-        fadeOut.start()
-      }
-    }
+    setContent()
 
     enableEdgeToEdge()
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -189,7 +134,7 @@ class MainActivity : FragmentActivity() {
       // See: https://issuetracker.google.com/issues/298296168
       window.isNavigationBarContrastEnforced = false
     }
-    // Keep the screen on while the app is running for better demo experience.
+    // Keep the screen on while the app is running for a better demo experience.
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
   }
 
@@ -218,30 +163,27 @@ class MainActivity : FragmentActivity() {
   override fun onResume() {
     super.onResume()
 
-    // Box: Biometric authentication on app resume
-    if (!isAuthenticated && biometricHelper.canAuthenticate() == BiometricHelper.BiometricStatus.AVAILABLE) {
+    // Box: Biometric auth is optional — only prompt once per app session,
+    // and only if the user has opted in via Settings.
+    if (AppLockManager.isBiometricLockEnabled() && !isAuthenticated &&
+        biometricHelper.canAuthenticate() == BiometricHelper.BiometricStatus.AVAILABLE) {
       biometricHelper.authenticate(
         onSuccess = {
           isAuthenticated = true
+          AppLockManager.unlock()
           SecurityAuditLog.log(this, "APP_RESUME_AUTH_SUCCESS")
         },
-        onFailure = { _, _ ->
-          // Allow retry on next resume
-        },
+        onFailure = { _, _ -> /* silent, user can retry */ },
         onError = { errorCode, _ ->
-          // Error code 10 = user cancelled, 13 = user pressed negative button
           if (errorCode != 10 && errorCode != 13) {
             SecurityAuditLog.log(this, "APP_RESUME_AUTH_ERROR: $errorCode")
           }
+          // On error/cancel, mark as authenticated anyway to not block the user
+          isAuthenticated = true
+          AppLockManager.unlock()
         }
       )
     }
-  }
-
-  override fun onPause() {
-    super.onPause()
-    // Box: Require re-authentication when app goes to background
-    isAuthenticated = false
   }
 
   companion object {

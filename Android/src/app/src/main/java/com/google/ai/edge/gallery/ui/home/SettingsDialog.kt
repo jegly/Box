@@ -292,6 +292,37 @@ fun SettingsDialog(
             }
           }
 
+          // Box: Biometric lock toggle
+          Column(modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}) {
+            Text(
+              "Biometric lock",
+              style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium),
+            )
+            Text(
+              "Require biometric authentication to access the app.",
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            val biometricLockEnabled = remember { mutableStateOf(com.google.ai.edge.gallery.security.AppLockManager.isBiometricLockEnabled()) }
+            Row(
+              modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically,
+            ) {
+              Text(
+                if (biometricLockEnabled.value) "Enabled" else "Disabled",
+                style = MaterialTheme.typography.bodyMedium,
+              )
+              androidx.compose.material3.Switch(
+                checked = biometricLockEnabled.value,
+                onCheckedChange = {
+                  com.google.ai.edge.gallery.security.AppLockManager.setBiometricLockEnabled(context, it)
+                  biometricLockEnabled.value = it
+                },
+              )
+            }
+          }
+
           // Box: Offline mode toggle
           Column(modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}) {
             Text(
@@ -356,15 +387,13 @@ fun SettingsDialog(
             }
           }
 
-          // Tos
+          // Privacy & Legal
           Column(modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}) {
             Text(
-              stringResource(R.string.settings_dialog_tos_title),
+              "Privacy & Legal",
               style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium),
             )
-            OutlinedButton(onClick = { showTos = true }) {
-              Text(stringResource(R.string.settings_dialog_view_app_terms_of_service))
-            }
+            // Removed "View App Terms of Service" button
             ClickableLink(
               url = "https://ai.google.dev/gemma/terms",
               linkText = stringResource(R.string.tos_dialog_title_gemma),

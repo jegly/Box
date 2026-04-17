@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Box: Network security configuration
-  - Blocks all cleartext (HTTP) traffic
-  - Enforces HTTPS-only communication
--->
 <network-security-config>
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
     </base-config>
+    <!-- Box: Allow these Google hosts for model allowlist + downloads -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">googleapis.com</domain>
+        <domain includeSubdomains="true">gstatic.com</domain>
+        <domain includeSubdomains="true">huggingface.co</domain>
+        <domain includeSubdomains="true">kaggle.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
 </network-security-config>

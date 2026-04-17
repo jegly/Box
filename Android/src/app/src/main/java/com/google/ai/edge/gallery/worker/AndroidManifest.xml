@@ -16,7 +16,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.google.ai.edge.gallery.worker">
+    package="com.box.gallery.worker">
 
   <uses-sdk
       android:minSdkVersion="31"

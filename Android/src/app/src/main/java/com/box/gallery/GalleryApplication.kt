@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.ai.edge.gallery
+package com.box.gallery
 
 import android.app.Application
 import com.google.ai.edge.gallery.data.DataStoreRepository

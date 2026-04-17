@@ -25,16 +25,16 @@
   <string name="aicore_image_limit_message" translatable="false">The current model can only support 1 image per chat. To ask about another image, create a new chat.</string>
   <string name="aichat_initializing_title" translatable="false">Initializing model</string>
   <string name="aichat_initializing_content" translatable="false">Sit tight, this can take up to 1 minute</string>
-  <string name="app_intro" translatable="false">Private, on-device AI models at your fingertips</string>
-  <string name="app_name" translatable="false">Box</string>
-  <string name="app_name_first_part" translatable="false">Box</string>
-  <string name="app_name_second_part" translatable="false">AI</string>
+  <string name="app_intro" translatable="false">Explore a world of amazing on-device models from</string>
+  <string name="app_name" translatable="false">Google AI Edge Gallery</string>
+  <string name="app_name_first_part" translatable="false">Google AI</string>
+  <string name="app_name_second_part" translatable="false">Edge Gallery</string>
   <string name="askimage_emptystate_title" translatable="false">Ask Image</string>
   <string name="askimage_emptystate_content" translatable="false">To get started, tap the + below to add an image (max 10 images per chat) and type a prompt to ask a question about it!</string>
   <string name="askimage_emptystate_content_aicore" translatable="false">To get started, tap the + below to add an image (max 1 image per chat) and type a prompt to ask a question about it!</string>
   <string name="askaudio_emptystate_title" translatable="false">Ask Audio</string>
   <string name="askaudio_emptystate_content" translatable="false">To get started, tap the + below to add a audio clip (limited to 1 clip up to 30 seconds) and type a prompt to transcribe or translate it!</string>
-  <string name="gallery_news_notification_title" translatable="false">Box Updates</string>
+  <string name="gallery_news_notification_title" translatable="false">Gallery News</string>
   <string name="baseline" translatable="false">Baseline</string>
   <string name="basic_info" translatable="false">Basic info</string>
   <string name="benchmark" translatable="false">Benchmark</string>
@@ -162,9 +162,7 @@
   <string name="select_downloaded_model" translatable="false">Select a downloaded model</string>
   <string name="select_model" translatable="false">Select a model</string>
   <string name="selected_count" translatable="false">%d selected</string>
-  <string name="settings_dialog_tos_title" translatable="false">Terms of service</string>
-  <string name="settings_dialog_view_app_terms_of_service" translatable="false">View App Terms of Service</string>
-  <string name="settings_dialog_gemma_prohibited_use_policy" translatable="false">Gemma Prohibited Use Policy</string>
+    <string name="settings_dialog_gemma_prohibited_use_policy" translatable="false">Gemma Prohibited Use Policy</string>
   <string name="share" translatable="false">Share</string>
   <string name="slide_up_to_cancel" translatable="false">Slide up to cancel</string>
   <string name="system_prompt_updated" translatable="false">System prompt updated</string>
@@ -178,7 +176,7 @@
   <string name="tos_dialog_title_gemma" translatable="false">Gemma Terms of Use</string>
   <string name="tos_dialog_accept_and_continue_button_label" translatable="false">Accept &amp; continue</string>
   <string name="tos_dialog_agree_and_continue_button_label" translatable="false">Agree &amp; continue</string>
-  <string name="try_it" translatable="false">Try it</string>
+  <string name="try_it" translatable="false">Open</string>
   <string name="turn_on_all" translatable="false">Turn on all</string>
   <string name="turn_off_all" translatable="false">Turn off all</string>
   <string name="undo" translatable="false">Undo</string>
@@ -246,7 +244,11 @@
   <string name="add_skill_manual_input_sheet_title" translatable="false">Create a skill</string>
   <string name="agent_skills" translatable="false">Agent Skills</string>
   <string name="agent_skills_description" translatable="false">Use specialized, high-order reasoning by loading different skills or creating your own.\n\nTry tapping a sample prompt below to see Agent Skills in action!</string>
-  <string name="disclaimer_dialog_content" translatable="false">Third-party skills are not authored or endorsed by Box. Box is not responsible for their contents, security, or data handling practices.\n\nPlease exercise caution before providing sensitive information, such as personal identification, tokens, or API keys.\n\nAny use of an Agent Skill is subject to the applicable terms for that Skill.\n\nBox is a privacy-focused fork of Google AI Edge Gallery. Not affiliated with Google.</string>
+  <string name="disclaimer_dialog_content" translatable="false">Third-party skills are not authored or endorsed by Google. Google is not responsible for their contents, security, or data handling practices.
+
+Please exercise caution before providing sensitive information, such as personal identification, tokens, or API keys.
+
+Any use of an Agent Skill is subject to the applicable terms for that Skill.</string>
   <string name="disclaimer_dialog_title" translatable="false">Add third-party skill</string>
   <string name="disclaimer_dialog_agree" translatable="false">Agree</string>
   <string name="delete_script_dialog_title" translatable="false">Delete script</string>
