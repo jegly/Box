@@ -26,7 +26,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,6 +78,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -100,9 +103,10 @@ import com.google.ai.edge.gallery.ui.modelmanager.ModelInitializationStatusType
 import com.google.ai.edge.gallery.ui.modelmanager.ModelManagerViewModel
 import com.google.ai.edge.gallery.ui.theme.customColors
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** Composable function for the main chat panel, displaying messages and handling user input. */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ChatPanel(
   modelManagerViewModel: ModelManagerViewModel,
@@ -283,6 +287,7 @@ fun ChatPanel(
         ) {
           itemsIndexed(messages) { index, message ->
             val imageHistoryCurIndex = remember { mutableIntStateOf(0) }
+            var showCopyButton by remember { mutableStateOf(false) }
             var hAlign: Alignment.Horizontal = Alignment.End
             var backgroundColor: Color = MaterialTheme.customColors.userBubbleBgColor
             var hardCornerAtLeftOrRight = false
@@ -388,6 +393,15 @@ fun ChatPanel(
                     }
                     messageBubbleModifier = messageBubbleModifier.background(backgroundColor)
                   }
+                  if (message is ChatMessageText && message.side == ChatSide.AGENT) {
+                    messageBubbleModifier = messageBubbleModifier.combinedClickable(
+                      onClick = { showCopyButton = false },
+                      onLongClick = {
+                        showCopyButton = true
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                      },
+                    )
+                  }
                   Box(modifier = messageBubbleModifier) {
                     when (message) {
                       // Text
@@ -451,12 +465,13 @@ fun ChatPanel(
                       horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                       LatencyText(message = message)
-                      if (message is ChatMessageText && message.content.isNotEmpty() && !uiState.inProgress) {
+                      if (message is ChatMessageText && message.content.isNotEmpty() && !uiState.inProgress && showCopyButton) {
                         MessageActionButton(
                           label = "Copy",
                           icon = Icons.Outlined.ContentCopy,
                           onClick = {
                             clipboardManager.setText(AnnotatedString(message.content))
+                            showCopyButton = false
                             scope.launch { snackbarHostState.showSnackbar("Copied") }
                           },
                         )

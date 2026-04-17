@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
@@ -163,17 +164,46 @@ class LlamaCppEngine {
                 try {
                     isGenerating = true
                     var fullResponse = ""
+                    var lastDisplayed = ""
+
+                    // Stop generation at any of these tokens — covers ChatML (Qwen/Mistral),
+                    // Llama-3 instruct, and generic EOS. Without this the model talks to itself.
+                    val stopSequences = listOf(
+                        "<|im_end|>",    // ChatML — Qwen, Mistral, etc.
+                        "<|eot_id|>",    // Llama-3
+                        "<|endoftext|>", // GPT-style EOS
+                        "<|im_start|>",  // Model starting a new turn (should have stopped already)
+                    )
+                    var shouldStop = false
 
                     val duration = measureTime {
-                        instance.getResponseAsFlow(query).collect { piece ->
-                            fullResponse += piece
-                            val displayResponse = cleanModelOutput(fullResponse, isFinal = false)
-                            if (displayResponse.isNotBlank()) {
-                                withContext(Dispatchers.Main) {
-                                    onToken(displayResponse)
+                        instance.getResponseAsFlow(query)
+                            .takeWhile { !shouldStop }
+                            .collect { piece ->
+                                fullResponse += piece
+
+                                // Detect the earliest stop sequence and truncate
+                                val stopIdx = stopSequences
+                                    .mapNotNull { seq -> fullResponse.indexOf(seq).takeIf { it >= 0 } }
+                                    .minOrNull()
+                                if (stopIdx != null) {
+                                    fullResponse = fullResponse.substring(0, stopIdx)
+                                    shouldStop = true
+                                    return@collect
+                                }
+
+                                // Send only the NEW portion (delta) so the ViewModel can append
+                                // correctly. Sending the full string caused "hello hello hello..."
+                                val displayResponse = cleanModelOutput(fullResponse, isFinal = false)
+                                val delta = if (displayResponse.length > lastDisplayed.length) {
+                                    displayResponse.substring(lastDisplayed.length)
+                                } else ""
+                                lastDisplayed = displayResponse
+
+                                if (delta.isNotEmpty()) {
+                                    withContext(Dispatchers.Main) { onToken(delta) }
                                 }
                             }
-                        }
                     }
 
                     val finalResponse = cleanModelOutput(fullResponse, isFinal = true).ifBlank {
@@ -204,12 +234,20 @@ class LlamaCppEngine {
 
     private fun cleanModelOutput(raw: String, isFinal: Boolean): String {
         var cleaned = raw
+            // ChatML tokens (Qwen, Mistral, etc.)
+            .replace(Regex("<\\|im_start\\|>(system|user|assistant)\\n?", RegexOption.IGNORE_CASE), "")
+            .replace("<|im_end|>", "")
+            .replace("<|endoftext|>", "")
+            .replace("<|eot_id|>", "")
+            // Thinking blocks
             .replace(Regex("<think>.*?</think>", RegexOption.DOT_MATCHES_ALL), "")
             .replace(Regex("<think>.*", RegexOption.DOT_MATCHES_ALL), "")
-            .replace(Regex("<turn\\|.*?\\|>", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("<\\|turn_end\\|>", RegexOption.IGNORE_CASE), "")
+            // Gemma turn tokens
             .replace(Regex("<start_of_turn>.*?\\n", RegexOption.IGNORE_CASE), "")
             .replace(Regex("<end_of_turn>", RegexOption.IGNORE_CASE), "")
+            // Misc
+            .replace(Regex("<turn\\|.*?\\|>", RegexOption.IGNORE_CASE), "")
+            .replace(Regex("<\\|turn_end\\|>", RegexOption.IGNORE_CASE), "")
             .replace("System instruction:", "")
 
         if (isFinal) {

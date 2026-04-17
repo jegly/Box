@@ -387,6 +387,32 @@ fun SettingsDialog(
             }
           }
 
+          // About
+          Column(
+            modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+          ) {
+            Text(
+              "About",
+              style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium),
+            )
+            Text(
+              "Developed by Jegly",
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            ClickableLink(
+              url = "https://github.com/jegly",
+              linkText = "github.com/jegly",
+              modifier = Modifier.padding(top = 2.dp),
+            )
+            ClickableLink(
+              url = "https://www.jegly.xyz",
+              linkText = "www.jegly.xyz",
+              modifier = Modifier.padding(top = 2.dp),
+            )
+          }
+
           // Privacy & Legal
           Column(modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}) {
             Text(

@@ -1,11 +1,29 @@
-# Box — Hybrid LiteRT / Llama.cpp support.
+<img src="https://raw.githubusercontent.com/jegly/Box/main/images/box-header.svg" alt="Box Header" width="800" />
+
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Upstream](https://img.shields.io/badge/upstream-google--ai--edge%2Fgallery-brightgreen)](https://github.com/google-ai-edge/gallery)
 
 **A security-hardened fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery) — with biometric lock, encrypted chat history, llama.cpp support, and GGUF model import.**
 
+## Disclaimer
+
+**Box is not affiliated with or endorsed by Google LLC in any way.**
+
+This is an independent, community-driven fork of the original Google AI Edge Gallery project.  
+All credit goes to Google and the original contributors for their excellent open-source work.
+
+Google branding, logos, and references have been completely removed and replaced.
+
 > **Repository:** [github.com/jegly/box](https://github.com/jegly/box)
+
+## Related
+
+Built [OfflineLLM](https://github.com/jegly/OfflineLLM) first — a privacy-first Android chat app with a [llama.cpp](https://github.com/ggerganov/llama.cpp) backend.
+
+This project (`Box`) forks Google's AI Edge Gallery to create a **hybrid LiteRT / llama.cpp** experience. Integrating llama.cpp here was easier than adding LiteRT to OfflineLLM.
+
+→ Try the [OfflineLLM app](https://github.com/jegly/OfflineLLM) for pure llama.cpp on-device chat.
 
 ---
 
@@ -71,7 +89,7 @@ Single-turn prompt sandbox with temperature, top-k, and other parameter controls
 
 ### Requirements
 
-- Android 12 (API 32) or higher
+- Android 16+ or higher
 - ~4 GB of free storage for a typical quantised LLM
 
 ### Build from source
@@ -117,6 +135,7 @@ Open `Android/` in Android Studio (Ladybug or newer) and run on a physical devic
 - **LiteRT (TFLite)** — upstream inference runtime
 - **llama.cpp** — GGUF inference (bundled as a git submodule)
 - **Firebase Analytics** — anonymous usage stats (can be disabled via Offline Mode)
+---
 
 ---
 
