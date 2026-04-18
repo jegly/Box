@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Upstream](https://img.shields.io/badge/upstream-google--ai--edge%2Fgallery-brightgreen)](https://github.com/google-ai-edge/gallery)
 
-**A security-hardened fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery) — with biometric lock, encrypted chat history, llama.cpp support, and GGUF model import.**
+**A security-hardened fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery) — with Unique Hybrid Features,biometric lock, encrypted chat history, llama.cpp support, and GGUF model import.**
 
 ## Disclaimer
 
@@ -32,6 +32,46 @@ This project (`Box`) forks Google's AI Edge Gallery to create a **hybrid LiteRT 
 Box is an Android app for running large language models entirely on-device. It inherits the full feature set of the upstream Google AI Edge Gallery and adds a security-focused layer on top: your conversations are encrypted at rest, the app can lock behind biometrics, and a hard offline mode blocks all network traffic on demand.
 
 On the inference side, Box integrates llama.cpp alongside the upstream LiteRT runtime. This lets you sideload any GGUF model file and choose between CPU, GPU, or NPU acceleration per model — so you are not limited to the curated model list.
+
+# 🔒 Box: The Only Android App That Fuses Google's LiteRT with llama.cpp + Biometric Security
+
+**What makes Box unique?** While other on-device LLM apps force you to choose between Google's optimized LiteRT ecosystem (limited model selection) or the open GGUF ecosystem (limited hardware acceleration), **Box runs both side-by-side** — letting you import any GGUF model while keeping LiteRT's NPU acceleration for compatible models.
+
+## Why This Matters (And Why No One Else Does It)
+
+| Feature | Google AI Edge Gallery | llama.cpp-only apps (OfflineLLM) | **Box (This Project)** |
+|---------|----------------------|--------------------------------|------------------------|
+| LiteRT + NPU acceleration | ✅ | ❌ | ✅ |
+| Import any GGUF model | ❌ | ✅ | ✅ |
+| Encrypted chat history | ❌ | ❌ | ✅ |
+| Biometric app lock | ❌ | ❌ | ✅ |
+| Per-model accelerator choice | ❌ | ❌ | ✅ |
+| Hard offline mode (airgap) | ❌ | ❌ | ✅ |
+
+**The technical breakthrough:** Box doesn't just bundle both runtimes — it lets you choose **per-model** whether to run on CPU, GPU (via OpenCL/Vulkan), or NPU (via QNN delegate). No other Android app gives you this granular control.
+
+## The Hybrid Architecture Most Developers Think Is Impossible
+User's GGUF file → llama.cpp → CPU/GPU
+Google's .litertlm → LiteRT → NPU (Qualcomm/MediaTek)
+↓
+Same chat interface, same encrypted history
+
+
+Most developers assume you have to pick one inference engine. Box proves otherwise — and adds enterprise-grade security on top.
+
+## Built By Someone Who Already Did The Hard Part
+
+This isn't a theoretical project. I built **OfflineLLM** (pure llama.cpp app) first, then forked Google AI Edge Gallery to add llama.cpp support. The result: an app that inherits Google's polished UI and multimodal features (Ask Image, Audio Scribe, Agent Skills) while adding the open model flexibility that Google's curated allowlist prevents.
+
+## For Security-Conscious Users Running Sensitive Conversations
+
+- SQLCipher AES-256 encrypted Room database
+- Biometric re-authentication on every foreground
+- Hard offline switch — blocks all network traffic
+- Input sanitization before inference AND persistence
+- On-device security audit log
+
+**Bottom line:** If you want to run Qwen3.6,Llama 3, Mistral, or any GGUF model *with* the option of NPU acceleration when available — while keeping your conversations encrypted and offline — Box is currently the only Android app that delivers all of that in one package.
 
 ---
 
