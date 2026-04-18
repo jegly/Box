@@ -51,17 +51,13 @@ On the inference side, Box integrates llama.cpp alongside the upstream LiteRT ru
 **The technical breakthrough:** Box doesn't just bundle both runtimes — it lets you choose **per-model** whether to run on CPU, GPU (via OpenCL/Vulkan), or NPU (via QNN delegate). No other Android app gives you this granular control.
 
 ## The Hybrid Architecture Most Developers Think Is Impossible
-User's GGUF file → llama.cpp → CPU/GPU
+User's GGUF file → llama.cpp → CPU/GPU/NPU
 Google's .litertlm → LiteRT → NPU (Qualcomm/MediaTek)
-↓
-Same chat interface, same encrypted history
+
 
 
 Most developers assume you have to pick one inference engine. Box proves otherwise — and adds enterprise-grade security on top.
 
-## Built By Someone Who Already Did The Hard Part
-
-This isn't a theoretical project. I built **OfflineLLM** (pure llama.cpp app) first, then forked Google AI Edge Gallery to add llama.cpp support. The result: an app that inherits Google's polished UI and multimodal features (Ask Image, Audio Scribe, Agent Skills) while adding the open model flexibility that Google's curated allowlist prevents.
 
 ## For Security-Conscious Users Running Sensitive Conversations
 
