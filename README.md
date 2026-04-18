@@ -33,7 +33,7 @@ Box is an Android app for running large language models entirely on-device. It i
 
 On the inference side, Box integrates llama.cpp alongside the upstream LiteRT runtime. This lets you sideload any GGUF model file and choose between CPU, GPU, or NPU acceleration per model — so you are not limited to the curated model list.
 
-#  Box: The Only Android App That Fuses Google's LiteRT with llama.cpp + Biometric Security
+#  Box: The Only Android App That Fuses the power of Google's LiteRT with llama.cpp + Biometric Security
 
 **What makes Box unique?** While other on-device LLM apps force you to choose between Google's optimized LiteRT ecosystem (limited model selection) or the open GGUF ecosystem (limited hardware acceleration), **Box runs both side-by-side** — letting you import any GGUF model while keeping LiteRT's NPU acceleration for compatible models.
 
