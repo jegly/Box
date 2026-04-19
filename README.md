@@ -1,8 +1,17 @@
 <img src="https://raw.githubusercontent.com/jegly/Box/main/images/box-header.svg" alt="Box Header" width="800" />
 
-
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Upstream](https://img.shields.io/badge/upstream-google--ai--edge%2Fgallery-brightgreen)](https://github.com/google-ai-edge/gallery)
+[![Kotlin](https://img.shields.io/badge/Kotlin-90.4%25-6272A4.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Android](https://img.shields.io/badge/Android-16%2B-50FA7B.svg?logo=android&logoColor=white)](https://developer.android.com)
+[![Version](https://img.shields.io/badge/Version-1.0.0-BD93F9.svg)](https://github.com/jegly/Box/releases)
+[![License](https://img.shields.io/badge/License-Apache%202.0-8BE9FD.svg)](LICENSE)
+[![llama.cpp](https://img.shields.io/badge/llama.cpp-GGUF-FFB86C.svg)](https://github.com/ggerganov/llama.cpp)
+[![LiteRT](https://img.shields.io/badge/LiteRT-NPU-FF79C6.svg)](https://ai.google.dev/edge/litert)
+[![SQLCipher](https://img.shields.io/badge/SQLCipher-AES--256-F1FA8C.svg?logo=sqlite&logoColor=white)](https://www.zetetic.net/sqlcipher/)
+[![Biometric](https://img.shields.io/badge/Biometric-Lock-FF5555.svg?logo=fingerprint&logoColor=white)]()
+[![Offline](https://img.shields.io/badge/Network-Hard%20Offline-FF5555.svg)]()
+[![GGUF Import](https://img.shields.io/badge/GGUF-Import-50FA7B.svg)]()
+[![Hybrid Engine](https://img.shields.io/badge/Engine-LiteRT%20%2B%20llama.cpp-BD93F9.svg)]()
+[![Fork](https://img.shields.io/badge/Fork-Google%20AI%20Edge-6272A4.svg)](https://github.com/google-ai-edge/gallery)
 
 **A security-hardened fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery) — with Unique Hybrid Features,biometric lock, encrypted chat history, llama.cpp support, and GGUF model import.**
 
