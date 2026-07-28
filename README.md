@@ -275,7 +275,7 @@ Box is an Android app for running AI entirely on-device — chat, voice mode, im
 > [!NOTE]
 >## What Box adds on top of upstream
 
-Box is a fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery). The upstream project is excellent — Box just layers on additional capabilities:
+Box started of as a fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery). The upstream project is excellent — Box layers on additional capabilities and features not present in upstream.
 
 | Area | What Box adds |
 |---|---|
