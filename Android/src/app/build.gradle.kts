@@ -35,7 +35,7 @@ android {
   defaultConfig {
     applicationId = "com.box.gallery"
     minSdk = 35
-    targetSdk = 36
+    targetSdk = 37
     versionCode = 26
     versionName = "1.0.12"
 
