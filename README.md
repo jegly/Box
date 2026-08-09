@@ -34,8 +34,9 @@
 [![Image Generation](https://img.shields.io/badge/FLUX.2%20klein%20%2B%20Z--Image-On--Device%20Diffusion-50FA7B.svg)]()
 [![Vulkan](https://img.shields.io/badge/Vulkan-GGUF%20GPU%20Offload-FFB86C.svg)]()
 
-If this project helped you, please ⭐️ star it to help others find it. We have hit 20K downloads ! Thank you to everyone for supporting Box.
-##  Download
+> ⭐️ **If this project helped you, please star it** — it helps others find it.
+>
+> We've hit **20K downloads**! Thank you to everyone for supporting Box.
 
 [![Download Box v3.3.2 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
 
