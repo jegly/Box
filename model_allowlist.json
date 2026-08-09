@@ -11,7 +11,7 @@
       "llmSupportImage": true,
       "defaultConfig": {
         "topK": 64,
-        "topP": 0.95,
+        "topP": 0.99,
         "temperature": 1.0,
         "maxTokens": 4096,
         "accelerators": "cpu,gpu"
