@@ -386,20 +386,6 @@ Call the `run_intent` tool with the following exact parameters:
 
 There are three ways to add a skill to the app:
 
-### Add from Community-Featured Skills
-
-We curated a list of skills contributed from our community. To try out a skill
-from this list, follow the steps below:
-
-**Steps:**
-
-1. Enter the Agent Skills use case with your selected model, and navigate to the
-   Skill Manager by tapping the "Skills" chip.
-
-2. Tap the (+) button and select the **Add skill from featured list** option.
-
-3. From there, simply tap a skill from the list to automatically add it to the
-   system.
 
 ### Add from a URL
 
