@@ -550,7 +550,7 @@ Licensed under the Apache License, Version 2.0
 
   ## Checksums
 
-  > ⚠️ Regenerate these for every release — run `sha256sum Box_*.apk` on the signed APKs.
+
 
   | Variant | SHA-256 |
   |---|---|
