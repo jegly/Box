@@ -31,14 +31,15 @@
 [![Offline](https://img.shields.io/badge/Network-Hard%20Offline-FF5555.svg)]()     
 [![MusicGeneration](https://img.shields.io/badge/Music%20Generation-On--Device-50FA7B.svg)]()
 [![Box Assist](https://img.shields.io/badge/Box%20Assist-Spoken%20Camera%20Assistance-50FA7B.svg)]()
-[![Image Generation](https://img.shields.io/badge/FLUX.2%20klein%20%2B%20Z--Image-On--Device%20Diffusion-50FA7B.svg)]()
+[![Image Generation](https://img.shields.io/badge/Bonsai%20%2B%20FLUX.2%20klein%20%2B%20Z--Image-On--Device%20Diffusion-50FA7B.svg)]()
+[![App Language](https://img.shields.io/badge/App%20Language-EN%20%C2%B7%20FR%20%C2%B7%20PT%20%C2%B7%20PT--BR-8BE9FD.svg)]()
 [![Vulkan](https://img.shields.io/badge/Vulkan-GGUF%20GPU%20Offload-FFB86C.svg)]()
 
 > ⭐️ **If this project helped you, please star it** — it helps others find it.
 >
 > We've hit **20K downloads**! Thank you to everyone for supporting Box.
 
-[![Download Box v3.3.2 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
+[![Download Box v3.3.3 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
 
 > **Note:** If you're using a custom ROM (LineageOS, GrapheneOS, CalyxOS), download the `custom-rom-support` APK from the [latest release](https://github.com/jegly/Box/releases/latest) instead.
 
@@ -78,7 +79,7 @@
   > are tracked via GitHub tags. Use **Settings → Check for updates** to see if a
   > newer Box release is available.
   
-**Box is a security-hardened, feature rich fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery) — with on-device image generation (FLUX.2 klein & Z-Image Turbo diffusion), Box Assist (spoken camera assistance for blind and low-vision users), AI image upscaling, face recognition, photo erase/inpainting, music & sound generation, voice mode (speech-to-speech AI chat), voice input, multilingual text-to-speech, document analysis and Q&A, vision AI, full GPU and Snapdragon/Tensor/MediaTek NPU acceleration, a hardened security posture (biometric lock, encrypted chat history, tap-jacking protection), llama.cpp support, and GGUF model import — and more**
+**Box is a security-hardened, feature rich fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery) — with on-device image generation (Bonsai Image 4B, FLUX.2 klein & Z-Image Turbo diffusion), Box Assist (spoken camera assistance for blind and low-vision users), AI image upscaling, face recognition, photo erase/inpainting, music & sound generation, voice mode (speech-to-speech AI chat), voice input, multilingual text-to-speech, document analysis and Q&A, vision AI, full GPU and Snapdragon/Tensor/MediaTek NPU acceleration, a hardened security posture (biometric lock, encrypted chat history, tap-jacking protection), llama.cpp support, and GGUF model import — and more**
 
 > [!IMPORTANT]
 >## Disclaimer
@@ -90,12 +91,19 @@ Box began as a fork of [Google AI Edge Gallery](https://github.com/google-ai-edg
 <details>
 <summary>
 
-## Changelog v1.0.7 – v3.3.2
+## Changelog v1.0.7 – v3.3.3
 
 </summary>
 
 | Version | Feature | Details |
 |---|---|---|
+| v3.3.3 | **🎨 Bonsai Image 4B — the new recommended image generator** | A ternary-weight build of FLUX.2 [klein] running fully on-device via LiteRT. **512×512 output** — double klein's tile — from a **smaller download**: ~4.3 GB against klein's 7.4 GB and Z-Image's 10.6 GB. Four steps, guidance-free, no internet at any point. It runs on the CPU (its 2.27 GB diffusion graph is too large for the GPU delegate), so allow a couple of minutes per image and around 8 GB of RAM. Send the result through **Upscale → EDSR ×4** for a 2048×2048 image. |
+| v3.3.3 | **⚡ Faster GGUF chat and faster image generation** | llama.cpp, whisper.cpp, stable-diffusion.cpp and ggml all updated to current builds — months of upstream work in one go. GGUF chat and Stable Diffusion image generation are both noticeably quicker on the same phone with the same model, and there is nothing to configure. Whisper transcription and Gemma/LiteRT chat behave exactly as before. |
+| v3.3.3 | **🌍 App language — French & Portuguese** | New **Settings → Language** picker: System, English, **Français**, **Português** and **Português (Brasil)**. Box uses Android's per-app language support, so your choice is remembered by the system. Coverage is partial for now (following upstream) — translated screens follow your selection, the rest stays in English. |
+| v3.3.3 | **15 new models** | Four new **vision** models for Ask Image: **SmolVLM2-2.2B** (1.5 GB), **SmolVLM2-500M** (just 0.36 GB), **InternVL3.5-2B** and **InternVL3-2B** — the InternVL pair are strong at reading text in photos. New chat and reasoning models: **Qwen3.5-0.8B** (hybrid attention, so memory stays flat as the conversation grows), **Phi-4-mini-reasoning**, **Polaris-4B Preview**, **Nanbeige 4.2 3B**, **SmolLM3-3B**, **Jan-nano**, **Ministral 3 3B** in both Instruct and Reasoning builds, **OLMo-2-1B Instruct** (fully open weights, data and training code), **Granite-4.0-H-1B** and **LFM2.5-1.2B-JP** for Japanese. **Gemma 4 12B** is now a 560 MB smaller download for exactly the same capability. |
+| v3.3.3 | **✍️ Model descriptions rewritten in plain English** | Around 70 cards on the download page rewritten. Each now opens with what the model actually does and when to pick it, with the technical specifications kept at the end for those who want them. Chip-specific builds say **"For Pixel 10 only"** or **"For Snapdragon 8 Elite phones only"** up front, so it is obvious which download suits your phone. Licences, RAM warnings and Gemma Terms of Use notices are all preserved. |
+| v3.3.3 | **Fixes** | **Chat now works properly on de-Googled Android** (custom-rom-support build): on GrapheneOS, AOSP, crDroid, LineageOS and similar, AI Chat silently fell back to the CPU whichever accelerator you picked, and the Tensor G5 model would not load at all — failing with "Input tensor not found" — even though the Benchmark screen ran the very same model on the TPU. Both are fixed. **Large downloads now resume by themselves** instead of staying stuck until you closed and reopened Box. |
+| v3.3.3 | **Under the hood** | AGP 9.3.1, Gradle 9.6.1, Kotlin 2.3.10 and 28 library updates. Debug logging is stripped from release builds and native debug symbols are no longer packaged. LiteRT and LiteRT-LM are deliberately held at their current versions. |
 | v3.3.2 | **Downloads fixed** | Model downloads are reliable again after 3.3.1 — no more failing mid-download or stalling at 100%. A previously stuck model downloads normally on the first try. |
 | v3.3.2 | **GGUF GPU crash fix (really this time)** | The Snapdragon GPU crash fix from 3.3.1 now actually ships in the build. |
 | v3.3.2 | **Biometric lock + database encryption** | The biometric app lock works alongside database encryption again — the two are independent, and the app re-locks when reopened. |
@@ -276,7 +284,7 @@ Box is an Android app for running AI entirely on-device — chat, voice mode, im
 > [!NOTE]
 >## What Box adds on top of upstream
 
-Box started of as a fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery). The upstream project is excellent — Box layers on additional capabilities and features not present in upstream.
+Box started off as a fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery). The upstream project is excellent — Box layers on additional capabilities and features not present in upstream.
 
 | Area | What Box adds |
 |---|---|
@@ -285,7 +293,7 @@ Box started of as a fork of [Google AI Edge Gallery](https://github.com/google-a
 | NPU / TPU | All Snapdragon / Tensor / MediaTek variants bundled in one APK (upstream ships per-SoC) |
 | Box Assist | Spoken camera assistance for blind and low-vision users — Live object/proximity callouts, Reading (OCR aloud), Describe (scene answers, spoken as generated), voice questions. One bundled download, autofocus + auto-flashlight, volume-button controls, TalkBack-friendly, fully offline |
 | Voice mode / Vision mode | Free talk (continuous hands-free loop) and Vision talk (live camera + voice) |
-| Image generation | On-device Stable Diffusion via GGUF, plus **FLUX.2 klein (4B)** and **Z-Image Turbo** diffusion via LiteRT |
+| Image generation | On-device Stable Diffusion via GGUF, plus **Bonsai Image 4B** (512×512, recommended), **FLUX.2 klein (4B)** and **Z-Image Turbo** diffusion via LiteRT |
 | Image recognition | **Identify**: MobileNet V2 / V3 Large (+ Tensor G5 NPU variant), **PlantNet** (1,081 plant species), **DM-Count** crowd counting — bundled, offline |
 | Erase (inpainting) | Paint over anything in a photo and MI-GAN removes it — brush size, iterative erase, save to gallery (bundled, offline) |
 | Music & sound generation | Generate music and sound effects from a text prompt, fully offline — quick clips, higher-quality audio, or long-form pieces up to ~3 minutes (**Sound** tab) |
@@ -325,8 +333,14 @@ Built for blind and low-vision users, and useful to anyone who wants a talking c
 ### Local Diffusion
 On-device image generation powered by [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp). Runs Stable Diffusion 1.5 in GGUF format fully offline — no API key, no cloud. Configurable steps, CFG scale, seed, and image size presets. Save generated images directly to your gallery. Import your own GGUF diffusion models.
 
-### Image Generation — FLUX.2 klein & Z-Image Turbo
-Two full text-to-image diffusion models running 100% on-device via LiteRT. **FLUX.2 klein (4B)** generates photorealistic images in just 4 steps (~7.4 GB download); **Z-Image Turbo** runs in 9 steps and shares nearly a gigabyte of its files with klein, so Box is smart enough not to download those twice. Interrupted multi-gigabyte downloads resume without refetching finished files.
+### Image Generation — Bonsai, FLUX.2 klein & Z-Image Turbo
+Three full text-to-image diffusion models running 100% on-device via LiteRT.
+
+**Bonsai Image 4B** — *recommended*. A ternary-weight build of FLUX.2 [klein] that produces **512×512** images in 4 steps from a **~4.3 GB** download, guidance-free. It runs on the CPU rather than the GPU — its 2.27 GB diffusion graph is too large for the GPU delegate — so allow a couple of minutes per image and around 8 GB of RAM. Send the output through **Upscale → EDSR ×4** for a 2048×2048 image.
+
+**FLUX.2 klein (4B)** generates photorealistic images in just 4 steps (~7.4 GB download); **Z-Image Turbo** runs in 9 steps (~10.6 GB) and shares nearly a gigabyte of its files with klein, so Box is smart enough not to download those twice. Interrupted multi-gigabyte downloads resume without refetching finished files.
+
+All three produce noticeably better output than the bundled Stable Diffusion GGUF models.
 
 ### Music & Sound Generation
 Generate music and sound effects from a text description — completely on-device, no internet, nothing leaves your phone. Under the **Sound** tab, pick a tier: **SoundGen** for quick clips and sound effects in seconds, **SoundGen HD** for higher-quality audio up to ~24 seconds, and **SoundGen HD Long** for full-length pieces up to ~3 minutes. Describe what you want, set the length, and hit Generate — then play it, save it to your device, or share it. The generator downloads on first use, then runs entirely offline.
@@ -385,6 +399,9 @@ When mic is off, camera mode sends a frame every 3 seconds automatically with "W
 ### Vision AI
 Ask questions about images using on-device vision models. Powered by LiteRT with Gemma 4 E2B / E4B — GPU-accelerated, up to 32K context.
 
+### App Language
+Switch Box's own interface language from **Settings → Language** — System, English, **Français**, **Português** or **Português (Brasil)**. Box uses Android's per-app language support, so your choice is stored by the system and survives app updates. Translation coverage is partial for now: translated screens follow your selection, everything else stays in English.
+
 ### Biometric App Lock
 Enable an optional biometric lock from Settings. The app re-locks automatically every time it is backgrounded. Unlock via fingerprint or face authentication before any content is shown.
 
@@ -421,7 +438,7 @@ A toggle in Settings forces the app into a fully airgapped state — all downloa
 
 - Android 14+
 - ~4 GB of free storage for a typical quantised LLM
-- `6 GB of Ram
+- 6 GB of RAM (8 GB for Bonsai image generation)
 
 ### Build from source
 
@@ -466,7 +483,7 @@ Open `Android/` in Android Studio and run on a physical device for best performa
 - **Hilt** — dependency injection
 - **Room + SQLCipher** — encrypted persistence
 - **LiteRT-LM** — LiteRT inference runtime for LLMs (GPU + NPU/TPU)
-- **LiteRT (CompiledModel)** — runs the bundled `.tflite` vision models (image upscaling, Identify/PlantNet/DM-Count, MI-GAN erase, Box Assist Live) and the FLUX.2 klein / Z-Image diffusion pipelines
+- **LiteRT (CompiledModel)** — runs the bundled `.tflite` vision models (image upscaling, Identify/PlantNet/DM-Count, MI-GAN erase, Box Assist Live) and the Bonsai / FLUX.2 klein / Z-Image diffusion pipelines
 - **Qualcomm QNN / QAIRT 2.47** — Hexagon NPU runtime (V69–V81, bundled)
 - **LiteRT NPU dispatch** — auto-selects Qualcomm / Google Tensor / MediaTek at runtime
 - **llama.cpp** — GGUF LLM inference (git submodule)
@@ -533,10 +550,12 @@ Licensed under the Apache License, Version 2.0
 
   ## Checksums
 
+  > ⚠️ Regenerate these for every release — run `sha256sum Box_*.apk` on the signed APKs.
+
   | Variant | SHA-256 |
   |---|---|
-  | main | `sha256:b1d15fd046edd08ea2d7b6ba371a66e066a7a6a6b0159e383a5d143cfe400fcf` |
-  | custom-rom-support | `sha256:f29f8dc26072c4383d72e88dca49b608b7e3920e48341865ea76491b9b230898` |
+  | main | `sha256:` *(pending — v3.3.3 not yet signed)* |
+  | custom-rom-support | `sha256:` *(pending — v3.3.3 not yet signed)* |
 
   ### Signing certificate
 
