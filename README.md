@@ -554,8 +554,8 @@ Licensed under the Apache License, Version 2.0
 
   | Variant | SHA-256 |
   |---|---|
-  | main | `sha256:` *(pending — v3.3.3 not yet signed)* |
-  | custom-rom-support | `sha256:` *(pending — v3.3.3 not yet signed)* |
+  | main | `sha256:` sha256:bde09a6e6a8e7f216593fdc23ab8334a70202282d913013ee48ceef3b6d9e93b |
+  | custom-rom-support | `sha256:` sha256:8c76b921c6d61c79bdab38651705e41d208526407e642867a14285d4a012745a |
 
   ### Signing certificate
 
