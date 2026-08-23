@@ -39,7 +39,7 @@
 >
 > We've hit **20K downloads**! Thank you to everyone for supporting Box.
 
-[![Download Box v3.3.3 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
+[![Download Box v3.3.4 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
 
 > **Note:** If you're using a custom ROM (LineageOS, GrapheneOS, CalyxOS), download the `custom-rom-support` APK from the [latest release](https://github.com/jegly/Box/releases/latest) instead.
 
@@ -91,12 +91,22 @@ Box began as a fork of [Google AI Edge Gallery](https://github.com/google-ai-edg
 <details>
 <summary>
 
-## Changelog v1.0.7 – v3.3.3
+## Changelog v1.0.7 – v3.3.4
 
 </summary>
 
 | Version | Feature | Details |
 |---|---|---|
+| v3.3.4 | **Restore — deblur and denoise your photos** | A new tile under **Image**. **Deblur** sharpens shots ruined by camera shake or a moving subject; **Denoise** cleans the speckled grain phones produce in dim light without smearing detail away. Both run on the GPU via LiteRT and are **bundled in the app**, so there is nothing to download and it works with no connection. Large photos are processed in overlapping tiles and stitched, so the result comes back at the size you put in. |
+| v3.3.4 | **Flatten — straighten a photo of a page** | Photograph a receipt, a book page or a form at an angle and Box will flatten the curl out so the text sits straight. Downloaded on first use (180 MB) rather than bundled, since it is a specialist tool. |
+| v3.3.4 | **Portrait Sketch** | Turn a portrait photo into a pencil line drawing. Works best on a single, well-lit face looking at the camera. Downloaded on first use (168 MB). |
+| v3.3.4 | **App language — Deutsch & 简体中文** | **German** and **Simplified Chinese** join French, Portuguese and Português (Brasil) in **Settings → Language**. Both were translated properly rather than merged from upstream, so every screen that can follow your language setting now does. A good deal of Box's text is still written directly into the app rather than being translatable, though, so English still shows in places — in every language. |
+| v3.3.4 | **Five light terminal themes** | The Ptyxis theme picker was dark-only. It now also offers **Belafonte Day**, **Everforest Light**, **GitHub Light**, **Solarized Light** and **Xterm Light**, taken from the same upstream palettes as the existing 33. Every existing theme is unchanged. |
+| v3.3.4 | **Model list fixes** | The model switcher inside a chat could not be scrolled, so with 41 models everything past the fold was unreachable — fixed. Models you have already downloaded now sort to the **top** of the list, in the switcher and in the Models browser, so you are no longer scrolling to the same place every time. |
+| v3.3.4 | **Gemma 4 12B output fix** | Gemma 4 12B spliced stray `<image\|>` markers into ordinary replies. Its bundle carries a multimodal checkpoint whose image support the runtime has not enabled yet, and the runtime rendered those unused media tokens as visible text. They are now filtered out. Applies only to the two models that can produce them; every other model's output is untouched. |
+| v3.3.4 | **Advanced Protection Mode support** | If you have Android's device-wide **Advanced Protection** switched on, Box tightens up to match: the biometric lock is forced on and cannot be switched off, MCP is forced off and cannot be switched on, and the tamper check terminates outright instead of showing a dismissible screen. Nothing changes if you do not use Advanced Protection. Network access is deliberately left alone so model downloads still work. |
+| v3.3.4 | **Two models removed** | **Qwen 3.5 0.8B** and **Polaris 4B Preview** are gone — neither could actually run in Box. Qwen 3.5 needs a newer LiteRT-LM than Box ships (its architecture is not supported by the current runtime), and Polaris asks for roughly 12 GB of GPU memory. Both were failing rather than merely slow. |
+| v3.3.4 | **Under the hood** | Declares `android.hardware.npu`, which Android 17 requires of apps that use the NPU. |
 | v3.3.3 | **🎨 Bonsai Image 4B — the new recommended image generator** | A ternary-weight build of FLUX.2 [klein] running fully on-device via LiteRT. **512×512 output** — double klein's tile — from a **smaller download**: ~4.3 GB against klein's 7.4 GB and Z-Image's 10.6 GB. Four steps, guidance-free, no internet at any point. It runs on the CPU (its 2.27 GB diffusion graph is too large for the GPU delegate), so allow a couple of minutes per image and around 8 GB of RAM. Send the result through **Upscale → EDSR ×4** for a 2048×2048 image. |
 | v3.3.3 | **⚡ Faster GGUF chat and faster image generation** | llama.cpp, whisper.cpp, stable-diffusion.cpp and ggml all updated to current builds — months of upstream work in one go. GGUF chat and Stable Diffusion image generation are both noticeably quicker on the same phone with the same model, and there is nothing to configure. Whisper transcription and Gemma/LiteRT chat behave exactly as before. |
 | v3.3.3 | **🌍 App language — French & Portuguese** | New **Settings → Language** picker: System, English, **Français**, **Português** and **Português (Brasil)**. Box uses Android's per-app language support, so your choice is remembered by the system. Coverage is partial for now (following upstream) — translated screens follow your selection, the rest stays in English. |
@@ -348,6 +358,15 @@ Generate music and sound effects from a text description — completely on-devic
 ### Image Upscaling (Super-Resolution)
 Enhance and enlarge any photo **4× on-device** with AI super-resolution. Pick an image, upscale it, and save the result to your gallery — fully offline, nothing leaves the device. Choose between **XLSR** (fastest, tiny), **Real-ESRGAN General** (balanced), **Real-ESRGAN x4plus** (highest quality), and **EDSR ×4**. All four models are bundled in the app and run via LiteRT, so there's nothing to download. Photos are auto-rotated (EXIF-aware) before upscaling.
 
+### Photo Restoration (Deblur & Denoise)
+Repair a photo on-device. **Deblur** targets motion blur from camera shake or a moving subject; **Denoise** removes the grain phones produce in low light without smearing away detail. Both use NAFNet via LiteRT, run on the GPU, and are **bundled in the app** — no download, works offline. Arbitrary-size photos are processed in overlapping 256×256 tiles and stitched seamlessly, and the result keeps the original dimensions. EXIF-aware, so portrait shots are not rotated.
+
+### Document Flatten
+Straighten a photograph of a curved or crumpled page so the text lies flat — useful for receipts, book pages and forms shot at an angle. Uses DewarpNet via LiteRT; the model predicts a correction grid which Box applies to the full-resolution original. Downloaded on first use.
+
+### Portrait Sketch
+Redraw a portrait photo as a pencil line drawing, using U²-Net via LiteRT. Works best on a single, well-lit, centred face. Downloaded on first use.
+
 ### Voice Input
 On-device speech-to-text using [whisper.cpp](https://github.com/ggerganov/whisper.cpp) or **SenseVoice** ([Sherpa-ONNX](https://github.com/k2-fsa/sherpa-onnx)). Tap to record, tap to transcribe. Copy or clear results. Whisper supports Tiny through Large-v3 in multiple languages; **SenseVoice** adds fast multilingual transcription (Chinese / English / Japanese / Korean / Cantonese, ~5× faster than Whisper) with a live preview, a multi-message log, and optional emotion/event tags. Audio never leaves the device.
 
@@ -400,7 +419,7 @@ When mic is off, camera mode sends a frame every 3 seconds automatically with "W
 Ask questions about images using on-device vision models. Powered by LiteRT with Gemma 4 E2B / E4B — GPU-accelerated, up to 32K context.
 
 ### App Language
-Switch Box's own interface language from **Settings → Language** — System, English, **Français**, **Português** or **Português (Brasil)**. Box uses Android's per-app language support, so your choice is stored by the system and survives app updates. Translation coverage is partial for now: translated screens follow your selection, everything else stays in English.
+Switch Box's own interface language from **Settings → Language** — System, English, **Français**, **Português**, **Português (Brasil)**, **Deutsch** or **简体中文**. Box uses Android's per-app language support, so your choice is stored by the system and survives app updates. Coverage is partial in every language: around two thirds of Box's text is written directly into the app rather than into its translatable resources, so it stays English whatever you pick. German and Simplified Chinese cover everything that currently can be translated; French and Portuguese cover a subset of that.
 
 ### Biometric App Lock
 Enable an optional biometric lock from Settings. The app re-locks automatically every time it is backgrounded. Unlock via fingerprint or face authentication before any content is shown.
@@ -554,8 +573,13 @@ Licensed under the Apache License, Version 2.0
 
   | Variant | SHA-256 |
   |---|---|
-  | main | `sha256:` sha256:bde09a6e6a8e7f216593fdc23ab8334a70202282d913013ee48ceef3b6d9e93b |
-  | custom-rom-support | `sha256:` sha256:8c76b921c6d61c79bdab38651705e41d208526407e642867a14285d4a012745a |
+  | main | *(pending — regenerate for v3.3.4)* |
+  | custom-rom-support | *(pending — regenerate for v3.3.4)* |
+
+  > ⚠️ Regenerate for every release — run `sha256sum Box_*.apk` on the **signed** APKs and paste the
+  > bare hashes here. The values above are placeholders until v3.3.4 is signed; shipping v3.3.3's
+  > hashes against a v3.3.4 APK is worse than shipping none, because a reader who checks will be
+  > told the download is bad.
 
   ### Signing certificate
 
