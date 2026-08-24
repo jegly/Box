@@ -37,7 +37,7 @@
 
 > ⭐️ **If this project helped you, please star it** — it helps others find it.
 >
-> We've hit **20K downloads**! Thank you to everyone for supporting Box.
+> We've hit **25K downloads**! Thank you to everyone for supporting Box.
 
 [![Download Box v3.3.4 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
 
