@@ -610,7 +610,7 @@ Licensed under the Apache License, Version 2.0
 [![Sandboxed](https://img.shields.io/badge/Inference-Kernel%20Sandboxed-FFB86C.svg)]()
 [![Ubuntu](https://img.shields.io/badge/Ubuntu-amd64-FFB86C.svg?logo=ubuntu&logoColor=white)](https://ubuntu.com)
 [![On-Device](https://img.shields.io/badge/Network-On--Device%20Only-FF5555.svg)]()
-[![License](https://img.shields.io/badge/License-Closed%20Source-FF5555.svg)]()
+[![License](https://img.shields.io/badge/License-GPL--3.0-FF5555.svg)](https://github.com/jegly/B0x/blob/main/LICENSE)
 [![Package](https://img.shields.io/badge/Package-.deb-6272A4.svg)]()
 
 ## Box for Linux (Desktop)
@@ -628,8 +628,8 @@ your own machine, with no account and no telemetry. Built on Google's
 > codebase. It is not a port or fork of the Android app. The two share a name
 > and a design philosophy and have many of the same features, but they are
 > independent projects. The Android app is open source (Apache-2.0). **Box for
-> Linux ships as a closed-source binary**: the `.deb` contains compiled code,
-> and its source is not published.
+> Linux is open source (GPL-3.0)**: the source lives in the
+> [B0x repository](https://github.com/jegly/B0x) alongside the `.deb` releases.
 
 ## What is Box for Linux?
 
@@ -777,9 +777,9 @@ download a model (Gemma 4 E2B, ~2.59 GB). After that, it runs offline.
 
 ## Source & License
 
-The Android app is open source (Apache-2.0). The Linux desktop app ships as a
-closed-source binary: the `.deb` contains compiled code, and its source is not
-published. © Jegly. All rights reserved.
+The Android app is open source (Apache-2.0). Box for Linux is open source
+under the [GNU General Public License v3.0](https://github.com/jegly/B0x/blob/main/LICENSE)
+(or later) — Copyright © 2026 Jegly.
 
 ---
 
@@ -788,4 +788,4 @@ published. © Jegly. All rights reserved.
 | Platform | Download | Source |
 |----------|----------|--------|
 | Android | APK (Releases) / Obtainium | Open (Apache-2.0) |
-| Linux (Ubuntu, amd64) | `.deb` ([B0x Releases](https://github.com/jegly/B0x/releases)) | Closed (binary only) |
+| Linux (Ubuntu, amd64) | `.deb` ([B0x Releases](https://github.com/jegly/B0x/releases)) | Open (GPL-3.0) |
