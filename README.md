@@ -576,11 +576,7 @@ Licensed under the Apache License, Version 2.0
   | main | *sha256:636fc64c28ce5fa719eb58ea0802c715305c49fb8e59ae543772d13757f0ac06* |
   | custom-rom-support | *sha256:acd2026a8506df9902adabb820bccf236a0f56e63a36ac772917ccfed6e8fe49* |
 
-  > ⚠️ Regenerate for every release — run `sha256sum Box_*.apk` on the **signed** APKs and paste the
-  > bare hashes here. The values above are placeholders until v3.3.4 is signed; shipping v3.3.3's
-  > hashes against a v3.3.4 APK is worse than shipping none, because a reader who checks will be
-  > told the download is bad.
-
+  
   ### Signing certificate
 
   Both variants are signed with the same key. Use this fingerprint with [Obtainium AppVerifier](https://github.com/ImranR98/Obtainium) to verify the APK was signed by the correct key before installing:
