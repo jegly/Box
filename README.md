@@ -16,6 +16,7 @@
 [![GGUF Import](https://img.shields.io/badge/GGUF-Import-50FA7B.svg)]()
 [![Snapdragon NPU](https://img.shields.io/badge/Snapdragon-NPU%208Gen2%2F3%2FElite-FF79C6.svg)](https://www.qualcomm.com/products/mobile/snapdragon)
 [![Google Tensor G5](https://img.shields.io/badge/Google%20Tensor%20G5-TPU%20(Pixel%2010)-FF79C6.svg)](https://store.google.com/gb/category/phones)
+[![Google Tensor G6](https://img.shields.io/badge/Google%20Tensor%20G6-TPU%20(Pixel%2011)-FF79C6.svg)](https://store.google.com/gb/category/phones)
 [![MediaTek](https://img.shields.io/badge/MediaTek-NPU-FF79C6.svg)](https://www.mediatek.com/)
 [![Gemini Nano](https://img.shields.io/badge/Gemini%20Nano-ML%20Kit%20%C2%B7%20NPU-FF79C6.svg)](https://developers.google.com/ml-kit/language/gemini-nano)
 [![RAG](https://img.shields.io/badge/RAG-Retrieval%20Augmented-BD93F9.svg)](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)
@@ -32,14 +33,14 @@
 [![MusicGeneration](https://img.shields.io/badge/Music%20Generation-On--Device-50FA7B.svg)]()
 [![Box Assist](https://img.shields.io/badge/Box%20Assist-Spoken%20Camera%20Assistance-50FA7B.svg)]()
 [![Image Generation](https://img.shields.io/badge/Bonsai%20%2B%20FLUX.2%20klein%20%2B%20Z--Image-On--Device%20Diffusion-50FA7B.svg)]()
-[![App Language](https://img.shields.io/badge/App%20Language-EN%20%C2%B7%20FR%20%C2%B7%20PT%20%C2%B7%20PT--BR-8BE9FD.svg)]()
+[![App Language](https://img.shields.io/badge/App%20Language-EN%20%C2%B7%20FR%20%C2%B7%20PT%20%C2%B7%20PT--BR%20%C2%B7%20DE%20%C2%B7%20ZH--CN-8BE9FD.svg)]()
 [![Vulkan](https://img.shields.io/badge/Vulkan-GGUF%20GPU%20Offload-FFB86C.svg)]()
 
 > ⭐️ **If this project helped you, please star it** — it helps others find it.
 >
-> We've hit **25K downloads**! Thank you to everyone for supporting Box.
+> We've hit **28K downloads**! Thank you to everyone for supporting Box.
 
-[![Download Box v3.3.4 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
+[![Download Box v3.3.5 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
 
 > **Note:** If you're using a custom ROM (LineageOS, GrapheneOS, CalyxOS), download the `custom-rom-support` APK from the [latest release](https://github.com/jegly/Box/releases/latest) instead.
 
@@ -91,12 +92,15 @@ Box began as a fork of [Google AI Edge Gallery](https://github.com/google-ai-edg
 <details>
 <summary>
 
-## Changelog v1.0.7 – v3.3.4
+## Changelog v1.0.7 – v3.3.5
 
 </summary>
 
 | Version | Feature | Details |
 |---|---|---|
+| v3.3.5 | **Pixel 11 / Tensor G6 acceleration** | Two models rebuilt for the **Tensor G6** in the Pixel 11 — **Gemma-4-E2B-it (Tensor G6)** (3.3 GB, 32K context, text/image/audio) and **Gemma 3 1B-IT (Tensor G6)** (2.0 GB, text only). Both run on the phone's dedicated AI hardware rather than the GPU, and are substantially faster there than the standard build. They appear automatically on a Pixel 11 and are hidden everywhere else. The Pixel 10 / Tensor G5 path is unchanged. |
+| v3.3.5 | **Themes for colour blindness** | Three new Ptyxis+ palettes — **Deuteranopia**, **Protanopia** and **Tritanopia**, one per common type of colour blindness. Each palette's colours are drawn from the standard published colour-blind-safe sets (Okabe–Ito, Paul Tol, IBM) and were chosen by simulating that specific condition and maximising the separation between the palette's worst-matched pair, so no two colours collapse into one. An ordinary theme put through the same check usually has at least one indistinguishable pair — blue and cyan being the classic. Plus **Seafoam Pastel**, a new regular palette, bringing Ptyxis+ to 42. |
+| v3.3.5 | **New font — Alice** | A warm, readable serif, selectable under **Settings → Font**. **Egyptian Hieroglyphs has been removed**; if you had it selected Box falls back to the default font on its own. |
 | v3.3.4 | **Restore — deblur and denoise your photos** | A new tile under **Image**. **Deblur** sharpens shots ruined by camera shake or a moving subject; **Denoise** cleans the speckled grain phones produce in dim light without smearing detail away. Both run on the GPU via LiteRT and are **bundled in the app**, so there is nothing to download and it works with no connection. Large photos are processed in overlapping tiles and stitched, so the result comes back at the size you put in. |
 | v3.3.4 | **Flatten — straighten a photo of a page** | Photograph a receipt, a book page or a form at an angle and Box will flatten the curl out so the text sits straight. Downloaded on first use (180 MB) rather than bundled, since it is a specialist tool. |
 | v3.3.4 | **Portrait Sketch** | Turn a portrait photo into a pencil line drawing. Works best on a single, well-lit face looking at the camera. Downloaded on first use (168 MB). |
@@ -430,7 +434,7 @@ All conversations are stored in a SQLCipher-encrypted Room database. History per
 ### NPU / TPU Acceleration
 All Qualcomm Hexagon NPU variants (Snapdragon 8 Gen 2 / 8 Gen 3 / 8 Elite / newer), Google Tensor TPU (Pixel 10), and MediaTek NPU are bundled in a single APK — no separate builds per device. Select **NPU/TPU** in the model's accelerator dropdown; Box auto-detects the chip and loads the right runtime.
 
-> **Note:** As of v3.1.0, dedicated NPU/TPU model builds run on the neural engine — **Gemma 4 E2B / Gemma 3 1B on the Google Tensor G5 (Pixel 10)**; **Gemma 3 1B & Gemma 3 270M on Snapdragon (SM8550 → SM8850) and MediaTek Dimensity (MT6989–MT6993)**; and **Gemma 3n E2B / Qwen3 0.6B on MediaTek Dimensity**. These are SoC-specific compiled `.litertlm` files that download automatically on matching hardware. The universal **Gemma 3n E2B / E4B** builds (multimodal) run on GPU/CPU everywhere — NPU acceleration for 3n is currently MediaTek-only. Generic litert-community GPU models still run on GPU (they don't ship the per-SoC NPU build). GPU remains an excellent default on all supported chips.
+> **Note:** As of v3.1.0, dedicated NPU/TPU model builds run on the neural engine — **Gemma 4 E2B / Gemma 3 1B on the Google Tensor G5 (Pixel 10)** and, as of v3.3.5, **on the Google Tensor G6 (Pixel 11)**; **Gemma 3 1B & Gemma 3 270M on Snapdragon (SM8550 → SM8850) and MediaTek Dimensity (MT6989–MT6993)**; and **Gemma 3n E2B / Qwen3 0.6B on MediaTek Dimensity**. These are SoC-specific compiled `.litertlm` files that download automatically on matching hardware. The universal **Gemma 3n E2B / E4B** builds (multimodal) run on GPU/CPU everywhere — NPU acceleration for 3n is currently MediaTek-only. Generic litert-community GPU models still run on GPU (they don't ship the per-SoC NPU build). GPU remains an excellent default on all supported chips.
 
 Supported npu accelerated hardware:
 
@@ -517,6 +521,28 @@ Open `Android/` in Android Studio and run on a physical device for best performa
 
 Box would not exist without the work of the teams and individuals behind the projects it builds on.
 
+### 🙌🙌🙌 A huge shout-out to the LiteRT Community — and to everyone building models 🙌🙌🙌
+
+**[Hugging Face LiteRT Community](https://huggingface.co/litert-community)** — the single biggest
+reason Box can do what it does. Nearly every model Box ships a card for is converted, quantised,
+benchmarked and published by this community, for free, for anyone. That includes the per-chip builds
+that are the hardest and least glamorous part of the job:  the
+Snapdragon and MediaTek and Tensor NPU builds, the GPU and CPU variants, and the model cards documenting what
+actually runs and how fast. Those compiled `.litertlm` files are what turn "on-device AI" from a
+demo into something that works on a phone in your pocket, offline.
+
+**And to every team and individual publishing open models** — Google (Gemma), IBM (Granite), Alibaba
+(Qwen), DeepSeek, TII (Falcon), Black Forest Labs, Stability AI, and the many independent researchers
+and hobbyists releasing weights, quantisations and conversions: thank you. You do the expensive,
+difficult work and then give it away. Box is a wrapper around your generosity, and it would be an
+empty app without it.🙏🙏🙏
+
+If you build models and would like to see yours in Box — or you know one that deserves a place —
+open an issue or send an email. LiteRT-LM builds are preferred, but quality GGUF suggestions are
+always welcome.
+
+---
+
 **[Google AI Edge Gallery](https://github.com/google-ai-edge/gallery)** — the upstream project this fork is based on. The Google AI Edge team built an exceptionally well-structured, open-source Android app and made it available under the Apache 2.0 licence. Everything in Box starts from their foundation. Upstream changes are periodically merged and any improvements we make that are appropriate to contribute back will be.
 
 **[llama.cpp](https://github.com/ggerganov/llama.cpp)** — Georgi Gerganov and the llama.cpp contributors for making high-performance on-device LLM inference accessible to everyone.
@@ -539,11 +565,11 @@ Box would not exist without the work of the teams and individuals behind the pro
   reference implementation that the Document Q&A feature in Box is based on.
 
 
-Thanks to **aryoda** and all the contributors for consistently reporting valid bugs. Appreciate the reports !
+Thanks to **aryoda** and all the contributors for consistently reporting valid bugs. Appreciate the reports ! 🙏
 
 
 
-Thank you to everyone who has opened issues, tested builds, or contributed to any of these projects. On-device AI is a community effort.
+Thank you to everyone who has opened issues, tested builds, or contributed to any of these projects. On-device AI is a community effort. 🙏
 
 ---
 
@@ -570,11 +596,10 @@ Licensed under the Apache License, Version 2.0
   ## Checksums
 
 
-
   | Variant | SHA-256 |
   |---|---|
-  | main | *sha256:636fc64c28ce5fa719eb58ea0802c715305c49fb8e59ae543772d13757f0ac06* |
-  | custom-rom-support | *sha256:acd2026a8506df9902adabb820bccf236a0f56e63a36ac772917ccfed6e8fe49* |
+  | main | ** |
+  | custom-rom-support | ** |
 
   
   ### Signing certificate
