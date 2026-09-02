@@ -598,8 +598,8 @@ Licensed under the Apache License, Version 2.0
 
   | Variant | SHA-256 |
   |---|---|
-  | main | ** |
-  | custom-rom-support | ** |
+  | main | *sha256:905b275a2ee91d53b04b7ab64741f50b1a29317f82a0fc761c8b3880fbb9f1ab* |
+  | custom-rom-support | *sha256:9d012780beca1b4c8848e800bf036cc302f69658085530c4f02c3bbc56939aa8* |
 
   
   ### Signing certificate
