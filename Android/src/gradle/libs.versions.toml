@@ -20,7 +20,7 @@ webkit = "1.14.0"
 protobuf = "0.10.0"
 protobufJavaLite = "4.26.1"
 #noinspection GradleDependency
-litertlm = "0.10.0"
+litertlm = "0.18.1"
 commonmark = "1.0.0-alpha02"
 richtext = "1.0.0-alpha05"
 playServicesTfliteJava = "16.5.0"
