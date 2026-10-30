@@ -6,7 +6,7 @@
 [![Version](https://img.shields.io/badge/UpstreamVersion-1.0.15-BD93F9.svg)](https://github.com/jegly/Box/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-8BE9FD.svg)](LICENSE)
 ![GitHub all releases](https://img.shields.io/github/downloads/jegly/Box/total)
-[![Android](https://img.shields.io/badge/Android-14%2B-50FA7B.svg?logo=android&logoColor=white)](https://developer.android.com)
+[![Android](https://img.shields.io/badge/Android-13%2B-50FA7B.svg?logo=android&logoColor=white)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-90.4%25-BD93F9.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Hybrid Engine](https://img.shields.io/badge/Engine-LiteRT%20%2B%20llama.cpp-BD93F9.svg)]()
 [![llama.cpp](https://img.shields.io/badge/llama.cpp-GGUF-FFB86C.svg)](https://github.com/ggerganov/llama.cpp)
@@ -32,7 +32,7 @@
 [![Offline](https://img.shields.io/badge/Network-Hard%20Offline-FF5555.svg)]()     
 [![MusicGeneration](https://img.shields.io/badge/Music%20Generation-On--Device-50FA7B.svg)]()
 [![Box Assist](https://img.shields.io/badge/Box%20Assist-Spoken%20Camera%20Assistance-50FA7B.svg)]()
-[![Image Generation](https://img.shields.io/badge/Bonsai%20%2B%20FLUX.2%20klein%20%2B%20Z--Image-On--Device%20Diffusion-50FA7B.svg)]()
+[![Image Generation](https://img.shields.io/badge/Bonsai%20%2B%20FLUX.2%20klein%20%2B%20Z--Image%20%2B%20iris--3b-On--Device%20Diffusion-50FA7B.svg)]()
 [![App Language](https://img.shields.io/badge/App%20Language-EN%20%C2%B7%20FR%20%C2%B7%20PT%20%C2%B7%20PT--BR%20%C2%B7%20DE%20%C2%B7%20ZH--CN-8BE9FD.svg)]()
 [![Vulkan](https://img.shields.io/badge/Vulkan-GGUF%20GPU%20Offload-FFB86C.svg)]()
 
@@ -40,7 +40,7 @@
 >
 > We've hit **47K downloads**!!!  Thank you to everyone for supporting Box, i never would have thought Box would have so many users !! All releases are now PQC ML-DSA-87 signed.
 
-[![Download Box v3.5.5-PQC APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
+[![Download Box v3.5.6 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
 
 > **Note:** If you're using a custom ROM (LineageOS, GrapheneOS, CalyxOS), download the `custom-rom-support` APK from the [latest release](https://github.com/jegly/Box/releases/latest) instead.
 
@@ -80,7 +80,7 @@
   > are tracked via GitHub tags. Use **Settings → Check for updates** to see if a
   > newer Box release is available.
   
-**Box is a security-hardened, feature rich fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery) — with on-device image generation (Bonsai Image 4B, FLUX.2 klein & Z-Image Turbo diffusion), Box Assist (spoken camera assistance for blind and low-vision users), AI image upscaling, face recognition, photo erase/inpainting, music & sound generation, voice mode (speech-to-speech AI chat), voice input, multilingual text-to-speech, document analysis and Q&A, vision AI, full GPU and Snapdragon/Tensor/MediaTek NPU acceleration, a hardened security posture (biometric lock, encrypted chat history, tap-jacking protection), llama.cpp support, and GGUF model import — and more**
+**Box is a security-hardened, feature rich fork of [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery) — with on-device image generation (Bonsai Image 4B, FLUX.2 klein, Z-Image Turbo & iris-3b Turbo diffusion), Box Assist (spoken camera assistance for blind and low-vision users), AI image upscaling, face recognition, photo erase/inpainting, music & sound generation, voice mode (speech-to-speech AI chat), voice input, multilingual text-to-speech, document analysis and Q&A, vision AI, full GPU and Snapdragon/Tensor/MediaTek NPU acceleration, a hardened security posture (biometric lock, encrypted chat history, tap-jacking protection), llama.cpp support, and GGUF model import — and more**
 
 > [!IMPORTANT]
 >## Disclaimer
@@ -92,12 +92,18 @@ Box began as a fork of [Google AI Edge Gallery](https://github.com/google-ai-edg
 <details>
 <summary>
 
-## Changelog v1.0.7 – v3.5.5-PQC
+## Changelog v1.0.7 – v3.5.6
 
 </summary>
 
 | Version | Feature | Details |
 |---|---|---|
+| v3.5.6 | **🎨 iris-3b Turbo — 768×768 image generation** | A fourth on-device image generator and the highest-resolution one in Box: Speridlabs' **iris-3b Turbo** makes **768×768** images in 4 steps, drawing pixels directly with no VAE. Every graph runs on the phone's GPU via LiteRT, nothing leaves the device. It is a big model — a **13.7 GB** download, a few minutes per picture and around 5 GB of memory while it works — so it is meant for phones with 12 GB of RAM or more; close other apps first. If the phone runs low on memory mid-image, Box stops cleanly and tells you instead of crashing. |
+| v3.5.6 | **📱 Android 13 support** | Minimum Android version lowered from 14 to **Android 13** — Box now installs on another generation of phones. One setting, **Accessibility data sensitivity**, needs Android 14 and shows as unavailable on 13. |
+| v3.5.6 | **System prompt fix** | In the model settings, the System prompt tab's **OK** button could be pushed off the edge of the dialog — most noticeably in German — so a chosen prompt could never be applied, wasn't selected when you reopened the dialog, and the model ignored it. OK is now always visible. Also fixed: changing the system prompt together with another setting silently dropped the new prompt. |
+| v3.5.6 | **MediaTek NPU chat fix (#190)** | On MediaTek NPU models (e.g. Dimensity 9300+), the second message in a chat came back empty. Box rebuilds the NPU conversation on every turn to work around a runtime issue, but the rebuild was failing every time because the old session was still open. It now closes the old session first. *(MediaTek NPU only — Snapdragon, Tensor, GPU and CPU are unchanged.)* |
+| v3.5.6 | **Licenses screen rebuilt, one Google library removed** | **Settings → View licenses** now opens Box's own list of every library, engine and font it ships, with the full license text for each. It replaces Google's `play-services-oss-licenses` viewer, which pulled several Google Play services components into the app for that one screen — and the screen it opened was empty anyway. |
+| v3.5.6 | **Under the hood** | AGP 9.5.0, Compose BOM 2026.09.00 and around 20 library updates. LiteRT and LiteRT-LM are deliberately held at their current versions. Release builds remain R8-obfuscated and PQC ML-DSA-87 signed. |
 | v3.5.5-PQC | **Post-quantum release signatures** | Release APKs now carry post-quantum (PQC) signatures alongside the standard Android signature. |
 | v3.5.5-PQC | **Dependencies updated** | Libraries bumped to current versions. Otherwise identical to v3.5.5. |
 | v3.5.5 | **Removed several crashing models** | A batch of newer LiteRT models were failing to load or crashing outright, mostly reported on lower RAM devices like the Pixel 6a. They need a newer LiteRT runtime than Box currently ships. Removed: Granite-4.0-H-1B, InternVL3-2B, InternVL3_5-2B, Jan-nano, MiniCPM5-1B (int4), Nanbeige4.2-3B, OLMo-2-1B-Instruct, Phi-4-mini-instruct, Phi-4-mini-reasoning, SmolLM3-3B, SmolVLM2-2.2B, SmolVLM2-500M, and both Ministral-3-3B models. |
@@ -314,7 +320,7 @@ Box started off as a fork of [Google AI Edge Gallery](https://github.com/google-
 | NPU / TPU | All Snapdragon / Tensor / MediaTek variants bundled in one APK (upstream ships per-SoC) |
 | Box Assist | Spoken camera assistance for blind and low-vision users — Live object/proximity callouts, Reading (OCR aloud), Describe (scene answers, spoken as generated), voice questions. One bundled download, autofocus + auto-flashlight, volume-button controls, TalkBack-friendly, fully offline |
 | Voice mode / Vision mode | Free talk (continuous hands-free loop) and Vision talk (live camera + voice) |
-| Image generation | On-device Stable Diffusion via GGUF, plus **Bonsai Image 4B** (512×512, recommended), **FLUX.2 klein (4B)** and **Z-Image Turbo** diffusion via LiteRT |
+| Image generation | On-device Stable Diffusion via GGUF, plus **Bonsai Image 4B** (512×512, recommended), **FLUX.2 klein (4B)**, **Z-Image Turbo** and **iris-3b Turbo** (768×768) diffusion via LiteRT |
 | Image recognition | **Identify**: MobileNet V2 / V3 Large (+ Tensor G5 NPU variant), **PlantNet** (1,081 plant species), **DM-Count** crowd counting — bundled, offline |
 | Erase (inpainting) | Paint over anything in a photo and MI-GAN removes it — brush size, iterative erase, save to gallery (bundled, offline) |
 | Music & sound generation | Generate music and sound effects from a text prompt, fully offline — quick clips, higher-quality audio, or long-form pieces up to ~3 minutes (**Sound** tab) |
@@ -354,14 +360,16 @@ Built for blind and low-vision users, and useful to anyone who wants a talking c
 ### Local Diffusion
 On-device image generation powered by [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp). Runs Stable Diffusion 1.5 in GGUF format fully offline — no API key, no cloud. Configurable steps, CFG scale, seed, and image size presets. Save generated images directly to your gallery. Import your own GGUF diffusion models.
 
-### Image Generation — Bonsai, FLUX.2 klein & Z-Image Turbo
-Three full text-to-image diffusion models running 100% on-device via LiteRT.
+### Image Generation — Bonsai, FLUX.2 klein, Z-Image Turbo & iris-3b Turbo
+Four full text-to-image diffusion models running 100% on-device via LiteRT.
 
 **Bonsai Image 4B** — *recommended*. A ternary-weight build of FLUX.2 [klein] that produces **512×512** images in 4 steps from a **~4.3 GB** download, guidance-free. It runs on the CPU rather than the GPU — its 2.27 GB diffusion graph is too large for the GPU delegate — so allow a couple of minutes per image and around 8 GB of RAM. Send the output through **Upscale → EDSR ×4** for a 2048×2048 image.
 
 **FLUX.2 klein (4B)** generates photorealistic images in just 4 steps (~7.4 GB download); **Z-Image Turbo** runs in 9 steps (~10.6 GB) and shares nearly a gigabyte of its files with klein, so Box is smart enough not to download those twice. Interrupted multi-gigabyte downloads resume without refetching finished files.
 
-All three produce noticeably better output than the bundled Stable Diffusion GGUF models.
+**iris-3b Turbo** — *highest resolution*. Speridlabs' 3B pixel-space diffusion transformer with a Qwen3-VL-4B text encoder makes **768×768** images in 4 steps, with no VAE. All 20 of its graphs run on the GPU, loaded one at a time so only one is in memory at once. It is the biggest commitment of the four: a **13.7 GB** download, a few minutes per picture and around 5 GB of memory while it works, so it is meant for phones with 12 GB of RAM or more. If memory runs low mid-image Box stops cleanly rather than crashing.
+
+All four produce noticeably better output than the bundled Stable Diffusion GGUF models.
 
 ### Music & Sound Generation
 Generate music and sound effects from a text description — completely on-device, no internet, nothing leaves your phone. Under the **Sound** tab, pick a tier: **SoundGen** for quick clips and sound effects in seconds, **SoundGen HD** for higher-quality audio up to ~24 seconds, and **SoundGen HD Long** for full-length pieces up to ~3 minutes. Describe what you want, set the length, and hit Generate — then play it, save it to your device, or share it. The generator downloads on first use, then runs entirely offline.
@@ -466,9 +474,9 @@ A toggle in Settings forces the app into a fully airgapped state — all downloa
 
 ### Requirements
 
-- Android 14+
+- Android 13+
 - ~4 GB of free storage for a typical quantised LLM
-- 6 GB of RAM (8 GB for Bonsai image generation)
+- 6 GB of RAM (8 GB for Bonsai image generation; 12 GB recommended for iris-3b Turbo)
 
 ### Build from source
 
@@ -513,7 +521,7 @@ Open `Android/` in Android Studio and run on a physical device for best performa
 - **Hilt** — dependency injection
 - **Room + SQLCipher** — encrypted persistence
 - **LiteRT-LM** — LiteRT inference runtime for LLMs (GPU + NPU/TPU)
-- **LiteRT (CompiledModel)** — runs the bundled `.tflite` vision models (image upscaling, Identify/PlantNet/DM-Count, MI-GAN erase, Box Assist Live) and the Bonsai / FLUX.2 klein / Z-Image diffusion pipelines
+- **LiteRT (CompiledModel)** — runs the bundled `.tflite` vision models (image upscaling, Identify/PlantNet/DM-Count, MI-GAN erase, Box Assist Live) and the Bonsai / FLUX.2 klein / Z-Image / iris-3b diffusion pipelines
 - **Qualcomm QNN / QAIRT 2.47** — Hexagon NPU runtime (V69–V81, bundled)
 - **LiteRT NPU dispatch** — auto-selects Qualcomm / Google Tensor / MediaTek at runtime
 - **llama.cpp** — GGUF LLM inference (git submodule)
@@ -566,6 +574,8 @@ always welcome.
 
 **[Supertonic](https://github.com/supertone-inc/supertonic)** — Supertone Inc. for the Supertonic on-device text-to-speech models that power Box's multilingual TTS feature (run on-device via Sherpa-ONNX).
 
+**[iris-3b](https://huggingface.co/speridlabs/iris-3b)** — Speridlabs for iris-3b Turbo (Apache-2.0), and the [iris-3b-Turbo-LiteRT](https://huggingface.co/litert-community/iris-3b-Turbo-LiteRT) conversion, whose open Android engine Box's iris-3b feature is built on.
+
 **[off-grid-mobile-ai](https://github.com/alichherawalla/off-grid-mobile-ai)** — Mohammed Ali Chherawalla for the on-device Stable Diffusion Android implementation, which was instrumental in getting efficient on-device image generation working and influenced parts of Box’s ImgGen pipeline.
 
  **[PocketSage](https://github.com/umerarif11/pocketsage)** — Umer Arif for the clean, fully offline RAG-on-Android
@@ -609,8 +619,8 @@ Licensed under the Apache License, Version 2.0
 
   | Variant | SHA-256 |
   |---|---|
-  | main | *sha256:2869458b88f137501c024a1fa7df3fea551443d12c1dfcd71a0b72da595be645* |
-  | custom-rom-support | *sha256:9375b0e42d856256634965e76e721f2a6135897263a94677e9898f0403733d71* |
+  | main | *sha256:068015ef9c01318d53801839c1ecd49d30f90dda0cacc27425648e9ce4e64dcd* |
+  | custom-rom-support | *sha256:4c7e90a2319381806f230376eee79edb0b1e259f926921dab587c928aa9865f5* |
 
   
   ### Signing certificate
@@ -618,6 +628,13 @@ Licensed under the Apache License, Version 2.0
   Both variants are signed with the same key. Use this fingerprint with [Obtainium AppVerifier](https://github.com/ImranR98/Obtainium) to verify the APK was signed by the correct key before installing:
 
   **Certificate SHA-256:** `8346b1a70d09ff5c9f7d7febc874cf694b6e267032a4eb38e261d538bce7b09c`
+
+  On Android 17 and later the APK is also verified through its post-quantum APK Signature Scheme v3.2 hybrid block:
+
+  | v3.2 signer | Certificate SHA-256 |
+  |---|---|
+  | PQC (ML-DSA-87) | `e9d72a40c2dfefac40d9c9b7faa81279023b3ab9378a4f59230136759555a7f4` |
+  | Hybrid classical | `8e63c40c7b59301e9acde1177d7cae9cbc43d72b961025f5ec7a674b87c56a4f` |
 
   ```bash
   apksigner verify --print-certs Box_*.apk | grep SHA-256
