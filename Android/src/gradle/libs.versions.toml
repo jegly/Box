@@ -41,7 +41,7 @@ moshi = "1.15.2"
 ksp = "2.3.13"
 mlkit-genai-prompt = "1.0.0-beta5"  # Ref: https://developers.google.com/ml-kit/genai/prompt/android/get-started#configure-project
 # Box: Security & persistence
-biometric = "1.4.0-alpha07"
+biometric = "1.4.0-beta01"
 room = "2.8.5"
 sqlcipher = "4.20.0"
 sqlite = "2.4.0"
