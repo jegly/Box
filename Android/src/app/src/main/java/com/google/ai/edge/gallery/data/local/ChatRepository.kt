@@ -34,12 +34,14 @@ class ChatRepository @Inject constructor(
         taskType: String = "",
         modelName: String = "",
         systemPrompt: String = "",
+        characterId: String = "",
     ): Conversation {
         val conversation = Conversation(
             title = title,
             taskType = taskType,
             modelName = modelName,
             systemPrompt = systemPrompt,
+            characterId = characterId,
         )
         conversationDao.insert(conversation)
         return conversation

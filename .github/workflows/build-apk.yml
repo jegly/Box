@@ -1,0 +1,45 @@
+name: Build APK
+
+# Se ejecuta a mano: pestaña Actions -> Build APK -> Run workflow.
+# El APK queda en "Artifacts" al terminar. La primera compilación es larga porque
+# compila llama.cpp, whisper.cpp y stable-diffusion.cpp con el NDK.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - name: Descargar el código con los submódulos (llama.cpp, whisper.cpp, stable-diffusion.cpp)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Instalar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Instalar el NDK y CMake que pide el proyecto
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "ndk;27.2.12479018" "cmake;3.22.1" "platforms;android-36"
+
+      - name: Preparar Gradle (con caché)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar el APK (release, firmado con la clave debug que usa el proyecto)
+        working-directory: Android/src
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleRelease -Dorg.gradle.jvmargs="-Xmx5g -Dfile.encoding=UTF-8" --stacktrace
+
+      - name: Subir el APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: box-roleplay-apk
+          path: Android/src/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error

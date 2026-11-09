@@ -14,4 +14,6 @@ data class Conversation(
     val updatedAt: Long = System.currentTimeMillis(),
     val messageCount: Int = 0,
     val systemPrompt: String = "",
+    // Roleplay: id del personaje con el que se creó este chat ("" = chat normal sin personaje)
+    val characterId: String = "",
 )
