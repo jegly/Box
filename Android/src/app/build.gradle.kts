@@ -59,10 +59,6 @@ android {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
   }
-  kotlinOptions {
-    jvmTarget = "11"
-    freeCompilerArgs += "-Xcontext-receivers"
-  }
   buildFeatures {
     compose = true
     buildConfig = true
@@ -154,4 +150,10 @@ protobuf {
 // the OssLicensesMenuActivity still compiles — it just won't have license data at runtime.
 tasks.configureEach {
   if (name.endsWith("OssLicensesTask")) enabled = false
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
 }
