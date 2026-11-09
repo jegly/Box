@@ -38,7 +38,7 @@
 
 > ⭐️ **If this project helped you, please star it** — it helps others find it.
 >
-> We've hit **47K downloads**!!!  Thank you to everyone for supporting Box, i never would have thought Box would have so many users !! All releases are now PQC ML-DSA-87 signed.
+> We've hit **50K downloads**!!!  Thank you to everyone for supporting Box, i never would have thought Box would have so many users :) !! All releases are now PQC ML-DSA-87 signed.
 
 [![Download Box v3.5.7 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
 
