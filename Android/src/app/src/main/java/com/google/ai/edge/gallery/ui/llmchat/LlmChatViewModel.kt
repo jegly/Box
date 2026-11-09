@@ -80,6 +80,31 @@ open class LlmChatViewModelBase() : ChatViewModel() {
     }
   }
 
+  // Roleplay: Box guardaba el prompt de sistema pero no se lo pasaba al modelo. Aquí se aplica
+  // (una vez por instancia del modelo y cada vez que el prompt cambia) antes de generar.
+  private val appliedSystemPrompts = mutableMapOf<String, Pair<Any, String>>()
+
+  private fun applySystemPromptIfNeeded(model: Model) {
+    val prompt = _currentSystemPrompt.value
+    val instance = model.instance ?: return
+    if (prompt.isBlank()) return
+    // Solo LiteRT-LM: en GGUF reiniciar la conversación recarga el modelo.
+    if (model.runtimeHelper !is com.google.ai.edge.gallery.ui.llmchat.LlmChatModelHelper) return
+    val applied = appliedSystemPrompts[model.name]
+    if (applied != null && applied.first === instance && applied.second == prompt) return
+    try {
+      model.runtimeHelper.resetConversation(
+        model = model,
+        supportImage = model.llmSupportImage,
+        supportAudio = model.llmSupportAudio,
+        systemInstruction = Contents.of(prompt),
+      )
+      appliedSystemPrompts[model.name] = Pair(instance, prompt)
+    } catch (e: Exception) {
+      Log.e(TAG, "Failed to apply system prompt", e)
+    }
+  }
+
   suspend fun getConversationById(conversationId: String) =
     chatRepository.getConversationById(conversationId)
 
@@ -238,6 +263,8 @@ open class LlmChatViewModelBase() : ChatViewModel() {
         delay(100)
       }
       delay(500)
+
+      applySystemPromptIfNeeded(model)
 
       // Run inference.
       val audioClips: MutableList<ByteArray> = mutableListOf()

@@ -98,6 +98,8 @@ private const val ROUTE_MODEL = "route_model"
 private const val ROUTE_BENCHMARK = "benchmark"
 private const val ROUTE_MODEL_MANAGER = "model_manager"
 private const val ROUTE_CHAT_HISTORY = "chat_history"
+private const val ROUTE_ROLEPLAY = "roleplay"
+private const val ROUTE_ROLEPLAY_EDIT = "roleplay_edit"
 private const val ENTER_ANIMATION_DURATION_MS = 500
 private val ENTER_ANIMATION_EASING = EaseOutExpo
 private const val ENTER_ANIMATION_DELAY_MS = 100
@@ -206,6 +208,7 @@ fun GalleryNavHost(
           },
           onModelsClicked = { navController.navigate(ROUTE_MODEL_MANAGER) },
           navigateToChatHistory = { navController.navigate(ROUTE_CHAT_HISTORY) },
+          onRoleplayClicked = { navController.navigate(ROUTE_ROLEPLAY) },
           onNewChatClicked = {
             val llmChatTask = modelManagerViewModel.getTaskById(BuiltInTaskId.LLM_CHAT)
             val firstModel = llmChatTask?.models?.firstOrNull()
@@ -403,6 +406,33 @@ fun GalleryNavHost(
           navController.navigate("$ROUTE_BENCHMARK/${model.name}")
         },
         startImport = startImport,
+      )
+    }
+
+    // Roleplay: lista de personajes.
+    composable(route = ROUTE_ROLEPLAY) {
+      val llmChatTask = modelManagerViewModel.getTaskById(BuiltInTaskId.LLM_CHAT)
+      com.google.ai.edge.gallery.ui.roleplay.RoleplayScreen(
+        navigateUp = { navController.navigateUp() },
+        modelName = llmChatTask?.models?.firstOrNull()?.name,
+        onOpenChat = { modelName, conversationId ->
+          lastNavigatedModelName = ""
+          navController.navigate(
+            "$ROUTE_MODEL/${BuiltInTaskId.LLM_CHAT}/$modelName?conversationId=$conversationId&autoResume=false"
+          )
+        },
+        onEditCharacter = { id -> navController.navigate("$ROUTE_ROLEPLAY_EDIT/$id") },
+      )
+    }
+
+    // Roleplay: crear o editar un personaje ("new" = personaje nuevo).
+    composable(
+      route = "$ROUTE_ROLEPLAY_EDIT/{characterId}",
+      arguments = listOf(navArgument("characterId") { type = NavType.StringType }),
+    ) { backStackEntry ->
+      com.google.ai.edge.gallery.ui.roleplay.CharacterEditorScreen(
+        characterId = backStackEntry.arguments?.getString("characterId") ?: "new",
+        navigateUp = { navController.navigateUp() },
       )
     }
 

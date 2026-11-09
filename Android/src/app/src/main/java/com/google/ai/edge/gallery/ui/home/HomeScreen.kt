@@ -169,6 +169,7 @@ fun HomeScreen(
   navigateToTaskScreen: (Task) -> Unit,
   onModelsClicked: () -> Unit,
   navigateToChatHistory: () -> Unit = {},
+  onRoleplayClicked: () -> Unit = {},
   onNewChatClicked: () -> Unit = {},
   onImportModelClicked: () -> Unit = {},
   enableAnimation: Boolean,
@@ -513,6 +514,23 @@ fun HomeScreen(
                       )
                     }
                   }
+                }
+
+                // Roleplay: personajes con tarjetas estilo SillyTavern / Layla.
+                FilledTonalButton(
+                  onClick = onRoleplayClicked,
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 16.dp),
+                ) {
+                  Icon(
+                    Icons.Rounded.Forum,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                  )
+                  Spacer(modifier = Modifier.width(8.dp))
+                  Text("Roleplay · Personajes", maxLines = 1)
                 }
 
                 // Tab header for categories.

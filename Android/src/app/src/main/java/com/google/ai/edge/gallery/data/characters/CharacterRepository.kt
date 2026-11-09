@@ -87,18 +87,25 @@ class CharacterRepository @Inject constructor(
         random: Random = Random.Default,
     ): Conversation = withContext(Dispatchers.IO) {
         val built = CharacterPromptBuilder.build(character.toCard(), userName)
+        val greeting = CharacterPromptBuilder.pickGreeting(built.greetings, random)
+        // El modelo no ve el saludo guardado como mensaje, así que se le avisa en el prompt.
+        val systemPrompt = if (greeting != null) {
+            built.systemPrompt + "\n\n### Opening message (already sent)\n" + greeting
+        } else {
+            built.systemPrompt
+        }
         val conversation = chatRepository.createConversation(
             title = character.name,
             taskType = "llm_chat",
             modelName = modelName,
-            systemPrompt = built.systemPrompt,
+            systemPrompt = systemPrompt,
             characterId = character.id,
         )
-        CharacterPromptBuilder.pickGreeting(built.greetings, random)?.let { greeting ->
+        greeting?.let { text ->
             chatRepository.saveMessage(
                 conversationId = conversation.id,
                 role = "assistant",
-                content = greeting,
+                content = text,
             )
         }
         conversation
