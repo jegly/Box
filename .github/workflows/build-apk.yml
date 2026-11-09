@@ -35,7 +35,7 @@ jobs:
         working-directory: Android/src
         run: |
           chmod +x gradlew
-          ./gradlew :app:assembleRelease -Dorg.gradle.jvmargs="-Xmx5g -Dfile.encoding=UTF-8" --stacktrace
+          ./gradlew :app:assembleRelease -Pandroid.injected.build.abi=arm64-v8a -Dorg.gradle.jvmargs="-Xmx5g -Dfile.encoding=UTF-8" --stacktrace
 
       - name: Subir el APK
         uses: actions/upload-artifact@v4

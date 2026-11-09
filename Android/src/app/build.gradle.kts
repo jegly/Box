@@ -30,7 +30,7 @@ plugins {
 
 android {
   namespace = "com.google.ai.edge.gallery"
-  compileSdk = 36
+  compileSdk = 37
 
   defaultConfig {
     applicationId = "com.box.gallery"
