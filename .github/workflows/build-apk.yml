@@ -37,9 +37,19 @@ jobs:
           chmod +x gradlew
           ./gradlew :app:assembleRelease -Pandroid.injected.build.abi=arm64-v8a -Dorg.gradle.jvmargs="-Xmx5g -Dfile.encoding=UTF-8" --stacktrace
 
-      - name: Buscar el APK generado
-        run: find Android/src -name "*.apk" -print; find Android/src/app/build/outputs -maxdepth 3 | head -30
-
+      - name: Revisar los APK (firma, versión, alineación)
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          echo "build-tools: $BT"
+          find Android/src -name "*.apk" | while read -r f; do
+            echo "=================== $f ($(du -h "$f" | cut -f1))"
+            "$BT/apksigner" verify --verbose --print-certs "$f" 2>&1 | head -12 || true
+            "$BT/aapt2" dump badging "$f" 2>&1 | grep -E "^package|sdkVersion|targetSdkVersion|native-code|uses-feature" | head -12 || true
+            "$BT/zipalign" -c -P 16 4 "$f" && echo "zipalign: OK" || echo "zipalign: NO alineado"
+          done
+          echo "=== contenido de outputs:"
+          find Android/src/app/build/outputs -maxdepth 3 | head -30
+          
       - name: Subir el APK
         uses: actions/upload-artifact@v4
         with:
