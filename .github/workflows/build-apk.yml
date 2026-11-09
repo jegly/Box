@@ -38,12 +38,12 @@ jobs:
           ./gradlew :app:assembleRelease -Pandroid.injected.build.abi=arm64-v8a -Dorg.gradle.jvmargs="-Xmx5g -Dfile.encoding=UTF-8" --stacktrace
 
       - name: Buscar el APK generado
-        run: find Android/src -name "*.apk" -not -path "*/intermediates/*" -print
+        run: find Android/src -name "*.apk" -print; find Android/src/app/build/outputs -maxdepth 3 | head -30
 
       - name: Subir el APK
         uses: actions/upload-artifact@v4
         with:
           name: box-roleplay-apk
           path: |
-            Android/src/**/outputs/apk/**/*.apk
+            Android/src/**/*.apk
           if-no-files-found: error
