@@ -38,9 +38,9 @@
 
 > ⭐️ **If this project helped you, please star it** — it helps others find it.
 >
-> We've hit **47K downloads**!!!  Thank you to everyone for supporting Box, i never would have thought Box would have so many users !! All releases are now PQC ML-DSA-87 signed.
+> We've hit **50K downloads**!!!  Thank you to everyone for supporting Box, i never would have thought Box would have so many users :) !! All releases are now PQC ML-DSA-87 signed.
 
-[![Download Box v3.5.6 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
+[![Download Box v3.5.7 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
 
 > **Note:** If you're using a custom ROM (LineageOS, GrapheneOS, CalyxOS), download the `custom-rom-support` APK from the [latest release](https://github.com/jegly/Box/releases/latest) instead.
 
@@ -92,12 +92,16 @@ Box began as a fork of [Google AI Edge Gallery](https://github.com/google-ai-edg
 <details>
 <summary>
 
-## Changelog v1.0.7 – v3.5.6
+## Changelog v1.0.7 – v3.5.7
 
 </summary>
 
 | Version | Feature | Details |
 |---|---|---|
+| v3.5.7 | **✂️ Background Removal — built in, fully offline, no Google Play services (#153)** | Background Removal used ML Kit's subject segmentation, where **Google Play services** downloads and runs the model — so it could never work on GrapheneOS and other de-Googled ROMs, and leaving the screen there showed a "requires Google Play services" message. It now runs **U²-Net**, an open-source (Apache-2.0) cut-out model **built into the app**, on the phone's GPU via LiteRT: no download, no internet, no Google Play services, on **both Main and custom-rom-support**. Edges are softer than before, so hair and fine outlines keep their shape. Cut-outs are saved at up to 2048 px on the longest side. Bundling the model makes the app about 88 MB larger. |
+| v3.5.7 | **🌍 New model: Hy-MT2-1.8B — translation** | Tencent's 1.8B translation model, for translating text between **33 languages**. It's a translation model, not a chat model: start your message with an instruction such as *"Translate the following text into French. Note that you should only output the translated result without any additional explanation:"* and then your text. Works best with one translation per chat. Runs on the processor by default; needs 8 GB of RAM or more. 1.8 GB download, Apache-2.0. |
+| v3.5.7 | **Image generator layout fix (#203)** | On the Stable Diffusion image screen, the **Generate** button could sit underneath the navigation bar on phones and tablets using three-button navigation. It now sits above it. The keyboard also covered the prompt fields — longer prompts couldn't be scrolled into view and the negative prompt was hidden while typing. The screen now shrinks above the keyboard so both stay visible. |
+| v3.5.7 | **Under the hood** | AGP 9.5.1, Gradle 9.9.0, Material 3 1.5.0-rc01 and other library updates. Removed one unused library and the ML Kit subject segmentation library. LiteRT and LiteRT-LM are deliberately held at their current versions. Release builds remain R8-obfuscated and PQC ML-DSA-87 signed. |
 | v3.5.6 | **🎨 iris-3b Turbo — 768×768 image generation** | A fourth on-device image generator and the highest-resolution one in Box: Speridlabs' **iris-3b Turbo** makes **768×768** images in 4 steps, drawing pixels directly with no VAE. Every graph runs on the phone's GPU via LiteRT, nothing leaves the device. It is a big model — a **13.7 GB** download, a few minutes per picture and around 5 GB of memory while it works — so it is meant for phones with 12 GB of RAM or more; close other apps first. If the phone runs low on memory mid-image, Box stops cleanly and tells you instead of crashing. |
 | v3.5.6 | **📱 Android 13 support** | Minimum Android version lowered from 14 to **Android 13** — Box now installs on another generation of phones. One setting, **Accessibility data sensitivity**, needs Android 14 and shows as unavailable on 13. |
 | v3.5.6 | **System prompt fix** | In the model settings, the System prompt tab's **OK** button could be pushed off the edge of the dialog — most noticeably in German — so a chosen prompt could never be applied, wasn't selected when you reopened the dialog, and the model ignored it. OK is now always visible. Also fixed: changing the system prompt together with another setting silently dropped the new prompt. |
@@ -331,7 +335,7 @@ Box started off as a fork of [Google AI Edge Gallery](https://github.com/google-
 | Document Q&A | RAG pipeline: import PDFs, embed with MiniLM on-device, ask questions grounded in document content — answers cite their source passages |
 | Gemini Nano | 6 on-device ML Kit features (Summarize, Proofread, Rewrite, Chat, Describe, Speech) — entirely on-device via AICore on Pixel 9+/10 and recent Samsung / Xiaomi / OnePlus / OPPO / vivo flagships (both branches as of v2.0.0). Vision modes add live camera + still-image analysis with visual overlays (pose skeleton, 468-point face mesh) |
 | Face Recognition | On-device, encrypted face recognition (both branches) — enroll and name people, then recognise them in photos or live from the camera. Multi-sample enrollment with alignment, capture-to-add, face-mesh overlay, SQLCipher-encrypted storage, fully offline and opt-in |
-| Background Removal | ML Kit Subject Segmentation — remove backgrounds from photos, output a transparency-preserving PNG (main branch) |
+| Background Removal | **U²-Net** via LiteRT, built into the app — one tap removes the background from a photo and outputs a transparency-preserving PNG. Fully offline, no Google Play services needed (both branches as of v3.5.7) |
 | Chat history | Persisted to a SQLCipher-encrypted Room database, resumable across sessions |
 | Security | Biometric app lock, hard offline mode, prompt sanitisation, audit log, tap jacking protection, accessibility data sensitivity |
 | Themes | Catppuccin (14 accents), Dracula (7 accents), a bright **Light** theme, and Material You — picker in Settings, with the home screen tinted to match the active theme |
@@ -547,7 +551,7 @@ actually runs and how fast. Those compiled `.litertlm` files are what turn "on-d
 demo into something that works on a phone in your pocket, offline.
 
 **And to every team and individual publishing open models** — Google (Gemma), IBM (Granite), Alibaba
-(Qwen), DeepSeek, TII (Falcon), Black Forest Labs, Stability AI, and the many independent researchers
+(Qwen), DeepSeek, TII (Falcon), Tencent (Hy-MT), Black Forest Labs, Stability AI, and the many independent researchers
 and hobbyists releasing weights, quantisations and conversions: thank you. You do the expensive,
 difficult work and then give it away. Box is a wrapper around your generosity, and it would be an
 empty app without it.🙏🙏🙏
@@ -575,6 +579,10 @@ always welcome.
 **[Supertonic](https://github.com/supertone-inc/supertonic)** — Supertone Inc. for the Supertonic on-device text-to-speech models that power Box's multilingual TTS feature (run on-device via Sherpa-ONNX).
 
 **[iris-3b](https://huggingface.co/speridlabs/iris-3b)** — Speridlabs for iris-3b Turbo (Apache-2.0), and the [iris-3b-Turbo-LiteRT](https://huggingface.co/litert-community/iris-3b-Turbo-LiteRT) conversion, whose open Android engine Box's iris-3b feature is built on.
+
+**[U²-Net](https://github.com/xuebinqin/U-2-Net)** — Xuebin Qin and co-authors for U²-Net (Apache-2.0), and the [U-2-Net LiteRT](https://huggingface.co/litert-community/U-2-Net) conversion that powers Box's built-in, offline Background Removal.
+
+**[Hy-MT2](https://huggingface.co/tencent/Hy-MT2-1.8B)** — Tencent for the Hy-MT2-1.8B translation model (Apache-2.0), and the [Hy-MT2-1.8B LiteRT-LM](https://huggingface.co/litert-community/Hy-MT2-1.8B) conversion.
 
 **[off-grid-mobile-ai](https://github.com/alichherawalla/off-grid-mobile-ai)** — Mohammed Ali Chherawalla for the on-device Stable Diffusion Android implementation, which was instrumental in getting efficient on-device image generation working and influenced parts of Box’s ImgGen pipeline.
 
@@ -619,8 +627,8 @@ Licensed under the Apache License, Version 2.0
 
   | Variant | SHA-256 |
   |---|---|
-  | main | *sha256:068015ef9c01318d53801839c1ecd49d30f90dda0cacc27425648e9ce4e64dcd* |
-  | custom-rom-support | *sha256:4c7e90a2319381806f230376eee79edb0b1e259f926921dab587c928aa9865f5* |
+  | main | *sha256:3171ea21ee3fea6c6374050ec184855226be99f611921bf3e78bbe70a60e1d19* |
+  | custom-rom-support | *sha256:76dbea78ae863769f4a302172c2b93e5f487be0ac1a462bf6cf1513be62f8b49* |
 
   
   ### Signing certificate
