@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.ai.edge.gallery.data.characters.CharacterCardException
 import com.google.ai.edge.gallery.data.characters.CharacterRepository
+import com.google.ai.edge.gallery.data.characters.PersonaRepository
 import com.google.ai.edge.gallery.data.local.entities.RoleplayCharacter
+import com.google.ai.edge.gallery.data.local.entities.UserPersona
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,9 +21,14 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class RoleplayViewModel @Inject constructor(
     private val repository: CharacterRepository,
+    private val personaRepository: PersonaRepository,
 ) : ViewModel() {
 
     val characters: StateFlow<List<RoleplayCharacter>> = repository
+        .observeAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val personas: StateFlow<List<UserPersona>> = personaRepository
         .observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -57,6 +64,36 @@ class RoleplayViewModel @Inject constructor(
         }
     }
 
+    fun savePersona(persona: UserPersona) {
+        viewModelScope.launch {
+            try {
+                personaRepository.save(persona)
+            } catch (e: Exception) {
+                _message.value = "No se pudo guardar la persona: ${e.message ?: "error desconocido"}"
+            }
+        }
+    }
+
+    fun selectPersona(persona: UserPersona) {
+        viewModelScope.launch {
+            try {
+                personaRepository.setActive(persona)
+            } catch (e: Exception) {
+                _message.value = "No se pudo cambiar de persona: ${e.message ?: "error desconocido"}"
+            }
+        }
+    }
+
+    fun deletePersona(persona: UserPersona) {
+        viewModelScope.launch {
+            try {
+                personaRepository.delete(persona)
+            } catch (e: Exception) {
+                _message.value = "No se pudo borrar la persona: ${e.message ?: "error desconocido"}"
+            }
+        }
+    }
+
     fun delete(character: RoleplayCharacter) {
         viewModelScope.launch {
             try {
@@ -75,7 +112,7 @@ class RoleplayViewModel @Inject constructor(
     fun startChat(character: RoleplayCharacter, modelName: String, onReady: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val conversation = repository.startChat(character, modelName)
+                val conversation = repository.startChat(character, modelName, personaRepository.getActive())
                 onReady(conversation.id)
             } catch (e: Exception) {
                 _message.value = "No se pudo abrir el chat: ${e.message ?: "error desconocido"}"

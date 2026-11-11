@@ -6,6 +6,7 @@ import com.google.ai.edge.gallery.data.local.ChatRepository
 import com.google.ai.edge.gallery.data.local.dao.CharacterDao
 import com.google.ai.edge.gallery.data.local.entities.Conversation
 import com.google.ai.edge.gallery.data.local.entities.RoleplayCharacter
+import com.google.ai.edge.gallery.data.local.entities.UserPersona
 import com.google.ai.edge.gallery.security.SecurityUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -83,10 +84,14 @@ class CharacterRepository @Inject constructor(
     suspend fun startChat(
         character: RoleplayCharacter,
         modelName: String,
-        userName: String = CharacterPromptBuilder.DEFAULT_USER_NAME,
+        persona: UserPersona? = null,
         random: Random = Random.Default,
     ): Conversation = withContext(Dispatchers.IO) {
-        val built = CharacterPromptBuilder.build(character.toCard(), userName)
+        val built = CharacterPromptBuilder.build(
+            card = character.toCard(),
+            userName = persona?.name ?: CharacterPromptBuilder.DEFAULT_USER_NAME,
+            userDescription = persona?.description ?: "",
+        )
         val greeting = CharacterPromptBuilder.pickGreeting(built.greetings, random)
         // El modelo no ve el saludo guardado como mensaje, así que se le avisa en el prompt.
         val systemPrompt = if (greeting != null) {
@@ -100,6 +105,7 @@ class CharacterRepository @Inject constructor(
             modelName = modelName,
             systemPrompt = systemPrompt,
             characterId = character.id,
+            personaId = persona?.id ?: "",
         )
         greeting?.let { text ->
             chatRepository.saveMessage(

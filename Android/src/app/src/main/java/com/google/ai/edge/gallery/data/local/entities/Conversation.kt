@@ -16,4 +16,6 @@ data class Conversation(
     val systemPrompt: String = "",
     // Roleplay: id del personaje con el que se creó este chat ("" = chat normal sin personaje)
     val characterId: String = "",
+    // Roleplay: persona (perfil del usuario) con la que se creó este chat ("" = ninguna)
+    val personaId: String = "",
 )

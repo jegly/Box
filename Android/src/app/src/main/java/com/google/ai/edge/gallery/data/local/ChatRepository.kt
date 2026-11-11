@@ -35,6 +35,7 @@ class ChatRepository @Inject constructor(
         modelName: String = "",
         systemPrompt: String = "",
         characterId: String = "",
+        personaId: String = "",
     ): Conversation {
         val conversation = Conversation(
             title = title,
@@ -42,6 +43,7 @@ class ChatRepository @Inject constructor(
             modelName = modelName,
             systemPrompt = systemPrompt,
             characterId = characterId,
+            personaId = personaId,
         )
         conversationDao.insert(conversation)
         return conversation

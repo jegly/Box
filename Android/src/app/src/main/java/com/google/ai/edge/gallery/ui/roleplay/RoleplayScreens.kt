@@ -86,6 +86,8 @@ fun RoleplayScreen(
     val message by viewModel.message.collectAsState()
     val snackbar = remember { SnackbarHostState() }
     var toDelete by remember { mutableStateOf<RoleplayCharacter?>(null) }
+    val personas by viewModel.personas.collectAsState()
+    var showPersonas by remember { mutableStateOf(false) }
 
     LaunchedEffect(message) {
         message?.let {
@@ -125,8 +127,10 @@ fun RoleplayScreen(
         },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+        PersonaBar(activeName = personas.firstOrNull { it.isActive }?.name, onClick = { showPersonas = true })
         if (characters.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(padding).padding(32.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxWidth().weight(1f).padding(32.dp), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Aún no tienes personajes", style = MaterialTheme.typography.titleMedium)
                     Text(
@@ -138,7 +142,7 @@ fun RoleplayScreen(
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier.fillMaxWidth().weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
             ) {
@@ -165,6 +169,17 @@ fun RoleplayScreen(
                 }
             }
         }
+        }
+    }
+
+    if (showPersonas) {
+        PersonaManagerDialog(
+            personas = personas,
+            onDismiss = { showPersonas = false },
+            onSelect = { viewModel.selectPersona(it) },
+            onSave = { viewModel.savePersona(it) },
+            onDelete = { viewModel.deletePersona(it) },
+        )
     }
 
     toDelete?.let { c ->
@@ -177,6 +192,22 @@ fun RoleplayScreen(
             },
             dismissButton = { TextButton(onClick = { toDelete = null }) { Text("Cancelar") } },
         )
+    }
+}
+
+/** Franja bajo la barra superior: con qué persona (perfil tuyo) vas a chatear. */
+@Composable
+private fun PersonaBar(activeName: String?, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).clickable(onClick = onClick),
+    ) {
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Chateas como", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(activeName ?: "Sin persona (usa «User»)", style = MaterialTheme.typography.titleSmall)
+            }
+            Text("Cambiar", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        }
     }
 }
 

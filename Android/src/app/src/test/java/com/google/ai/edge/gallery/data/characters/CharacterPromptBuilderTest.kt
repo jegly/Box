@@ -103,6 +103,23 @@ class CharacterPromptBuilderTest {
     }
 
     @Test
+    fun personaDescriptionGoesInItsOwnSectionWithMacrosResolved() {
+        val built = CharacterPromptBuilder.build(
+            card,
+            userName = "Ana",
+            userDescription = "{{user}} es una exploradora. {{char}} la conoce.",
+        )
+        assertTrue(built.systemPrompt.contains("### About Ana\nAna es una exploradora. Layla la conoce."))
+        assertFalse(built.systemPrompt.contains("{{"))
+    }
+
+    @Test
+    fun blankPersonaDescriptionAddsNoSection() {
+        val built = CharacterPromptBuilder.build(card, userName = "Ana", userDescription = "   ")
+        assertFalse(built.systemPrompt.contains("### About"))
+    }
+
+    @Test
     fun longCardsAreNotTruncated() {
         val big = card.copy(description = "x".repeat(20_000))
         assertTrue(CharacterPromptBuilder.build(big).systemPrompt.length > 20_000)

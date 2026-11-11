@@ -42,6 +42,7 @@ object CharacterPromptBuilder {
         card: CharacterCard,
         userName: String = DEFAULT_USER_NAME,
         defaultInstruction: String = DEFAULT_INSTRUCTION,
+        userDescription: String = "",
     ): BuiltPrompt {
         val charName = card.name.trim().ifEmpty { "Character" }
         val user = userName.trim().ifEmpty { DEFAULT_USER_NAME }
@@ -61,6 +62,8 @@ object CharacterPromptBuilder {
             ?.let { parts += "### Personality\n$it" }
         resolve(card.scenario).takeIf { it.isNotEmpty() }
             ?.let { parts += "### Scenario\n$it" }
+        resolve(userDescription).takeIf { it.isNotEmpty() }
+            ?.let { parts += "### About $user\n$it" }
         resolve(START_MARKER.replace(card.exampleMessages) { "\n" }).takeIf { it.isNotEmpty() }
             ?.let { parts += "### Example dialogue\n$it" }
 
