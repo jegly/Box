@@ -17,7 +17,7 @@ dataStore = "1.3.0"
 gson = "2.15.0"
 lifecycleProcess = "2.8.7"
 webkit = "1.18.0"
-protobuf = "0.10.0"
+protobuf = "0.10.1"
 protobufJavaLite = "4.36.2"
 #noinspection GradleDependency
 litertlm = "0.10.0"
