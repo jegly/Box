@@ -91,19 +91,14 @@ class CharacterRepository @Inject constructor(
             card = character.toCard(),
             userName = persona?.name ?: CharacterPromptBuilder.DEFAULT_USER_NAME,
             userDescription = persona?.description ?: "",
+            impression = character.impression,
         )
         val greeting = CharacterPromptBuilder.pickGreeting(built.greetings, random)
-        // El modelo no ve el saludo guardado como mensaje, así que se le avisa en el prompt.
-        val systemPrompt = if (greeting != null) {
-            built.systemPrompt + "\n\n### Opening message (already sent)\n" + greeting
-        } else {
-            built.systemPrompt
-        }
         val conversation = chatRepository.createConversation(
             title = character.name,
             taskType = "llm_chat",
             modelName = modelName,
-            systemPrompt = systemPrompt,
+            systemPrompt = built.systemPrompt,
             characterId = character.id,
             personaId = persona?.id ?: "",
         )

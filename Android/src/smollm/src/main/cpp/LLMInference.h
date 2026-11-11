@@ -52,6 +52,7 @@ private:
     std::vector<llama_token> _kvTokens;
     std::vector<llama_token> _pendingPrompt;
     bool _promptDecoded = false;
+    bool _isGemma4 = false;   // plantilla <|turn> ... <turn|>: se formatea a mano
     float _windowHigh = 0.75f;
     float _windowLow = 0.45f;
 

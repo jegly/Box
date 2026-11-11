@@ -1,5 +1,6 @@
 #include "LLMInference.h"
 #include "ContextWindow.h"
+#include "ChatFormats.h"
 #include <android/log.h>
 #include <cstring>
 #include <iomanip>
@@ -96,6 +97,8 @@ LLMInference::loadModel(const char *model_path, float minP, float temperature, f
         }
     }
 
+    _isGemma4 = _chatTemplate != nullptr && (strstr(_chatTemplate, "<|turn>") != nullptr ||
+                                             strstr(_chatTemplate, "<turn|>") != nullptr);
     this->_storeChats = storeChats;
 }
 
@@ -121,6 +124,13 @@ LLMInference::getContextSizeUsed() const {
 
 std::vector<llama_token>
 LLMInference::_tokenizeMessages(const std::vector<llama_chat_message> &msgs) {
+    if (_isGemma4) {
+        std::vector<std::pair<std::string, std::string>> items;
+        items.reserve(msgs.size());
+        for (auto &m: msgs) items.emplace_back(m.role, m.content);
+        std::string prompt = chatfmt::formatGemma4(items);
+        return common_tokenize(llama_model_get_vocab(_model), prompt, true, true);
+    }
     int new_len = llama_chat_apply_template(
         _chatTemplate,
         msgs.data(),

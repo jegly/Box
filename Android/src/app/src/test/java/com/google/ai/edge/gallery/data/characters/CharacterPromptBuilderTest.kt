@@ -46,25 +46,27 @@ class CharacterPromptBuilderTest {
     @Test
     fun usesDefaultInstructionWhenCardHasNoSystemPrompt() {
         val built = CharacterPromptBuilder.build(card, userName = "Ana")
-        assertTrue(built.systemPrompt.startsWith("Write Layla's next reply"))
-        assertTrue(built.systemPrompt.contains("roleplay between Layla and Ana"))
+        assertTrue(built.systemPrompt.contains("Write only Layla's next reply"))
+        assertTrue(built.systemPrompt.endsWith("Reply in the language Ana writes in."))
     }
 
     @Test
     fun customSystemPromptReplacesDefaultAndOriginalMacroExpandsIt() {
         val custom = CharacterPromptBuilder.build(card.copy(systemPrompt = "Solo habla de {{char}}."), "Ana")
         assertTrue(custom.systemPrompt.startsWith("Solo habla de Layla."))
-        assertFalse(custom.systemPrompt.contains("Write Layla's next reply"))
+        assertFalse(custom.systemPrompt.contains("Write only Layla's next reply"))
 
         val withOriginal = CharacterPromptBuilder.build(card.copy(systemPrompt = "Antes. {{original}} Después."), "Ana")
-        assertTrue(withOriginal.systemPrompt.startsWith("Antes. Write Layla's next reply"))
+        assertTrue(withOriginal.systemPrompt.startsWith("Antes. Write only Layla's next reply"))
         assertTrue(withOriginal.systemPrompt.contains("Después."))
     }
 
     @Test
     fun emptySectionsAreOmitted() {
         val built = CharacterPromptBuilder.build(CharacterCard(name = "Solo"))
-        assertFalse(built.systemPrompt.contains("###"))
+        assertFalse(built.systemPrompt.contains("Information about"))
+        assertFalse(built.systemPrompt.contains("Example dialogue"))
+        assertFalse(built.systemPrompt.contains("impression"))
         assertEquals(emptyList<String>(), built.greetings)
         assertEquals("", built.postHistoryInstructions)
     }
@@ -76,7 +78,7 @@ class CharacterPromptBuilderTest {
             "Ana",
         )
         assertFalse(built.systemPrompt.contains("<start>", ignoreCase = true))
-        assertTrue(built.systemPrompt.contains("### Example dialogue"))
+        assertTrue(built.systemPrompt.contains("Example dialogue:"))
     }
 
     @Test
@@ -109,14 +111,41 @@ class CharacterPromptBuilderTest {
             userName = "Ana",
             userDescription = "{{user}} es una exploradora. {{char}} la conoce.",
         )
-        assertTrue(built.systemPrompt.contains("### About Ana\nAna es una exploradora. Layla la conoce."))
+        assertTrue(built.systemPrompt.contains("Information about Ana: Ana es una exploradora. Layla la conoce."))
         assertFalse(built.systemPrompt.contains("{{"))
     }
 
     @Test
     fun blankPersonaDescriptionAddsNoSection() {
         val built = CharacterPromptBuilder.build(card, userName = "Ana", userDescription = "   ")
-        assertFalse(built.systemPrompt.contains("### About"))
+        assertFalse(built.systemPrompt.contains("Information about"))
+    }
+
+    @Test
+    fun promptIsPlainTextLikeLaylaWithoutMarkdown() {
+        val built = CharacterPromptBuilder.build(
+            card.copy(exampleMessages = "<START>\n{{user}}: Hola\n{{char}}: Buenas"),
+            userName = "Ana",
+            userDescription = "Exploradora",
+            impression = "{{user}} le cae bien.",
+        )
+        assertFalse(built.systemPrompt.contains("#"))
+        assertFalse(built.systemPrompt.contains("**"))
+        assertTrue(built.systemPrompt.contains("Layla has this impression of Ana:\nAna le cae bien."))
+    }
+
+    @Test
+    fun identityLineIsTheLastThingInThePrompt() {
+        val built = CharacterPromptBuilder.build(card, userName = "Ana")
+        assertTrue(
+            built.systemPrompt.contains(
+                "The User is Ana. You ARE Layla. Embody the character and personality completely."
+            )
+        )
+        // lo ultimo es la frase de identidad (+ la instruccion corta si no hay prompt propio)
+        val idx = built.systemPrompt.indexOf("The User is Ana.")
+        assertTrue(idx > built.systemPrompt.indexOf("Una cafetería"))
+        assertTrue(idx > built.systemPrompt.indexOf("Example dialogue:"))
     }
 
     @Test

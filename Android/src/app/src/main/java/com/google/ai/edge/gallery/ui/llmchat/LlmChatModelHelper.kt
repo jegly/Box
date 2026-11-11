@@ -206,6 +206,69 @@ object LlmChatModelHelper : LlmModelHelper {
     }
   }
 
+  /**
+   * Roleplay: como resetConversation, pero la conversación nueva arranca con un historial
+   * (`initialMessages`). Roles: "user" y "assistant". Se usa para la ventana deslizante de contexto
+   * y para reabrir un chat con el modelo ya "recordando" lo anterior.
+   */
+  @OptIn(ExperimentalApi::class)
+  fun resetConversationWithHistory(
+    model: Model,
+    supportImage: Boolean,
+    supportAudio: Boolean,
+    systemInstruction: Contents?,
+    history: List<Pair<String, String>>,
+  ) {
+    try {
+      Log.d(TAG, "Resetting conversation with ${history.size} messages for '${model.name}'")
+      val instance = model.instance as LlmModelInstance? ?: return
+      instance.conversation.close()
+
+      val topK = model.getIntConfigValue(key = ConfigKeys.TOPK, defaultValue = DEFAULT_TOPK)
+      val topP = model.getFloatConfigValue(key = ConfigKeys.TOPP, defaultValue = DEFAULT_TOPP)
+      val temperature =
+        model.getFloatConfigValue(key = ConfigKeys.TEMPERATURE, defaultValue = DEFAULT_TEMPERATURE)
+      val accelerator =
+        model.getStringConfigValue(
+          key = ConfigKeys.ACCELERATOR,
+          defaultValue = Accelerator.GPU.label,
+        )
+
+      // Gemma pide que los turnos alternen empezando por el usuario. Si el historial empieza con
+      // el saludo del personaje (asistente), se antepone un turno de usuario neutro.
+      val messages = mutableListOf<Message>()
+      if (history.firstOrNull()?.first == "assistant") {
+        messages.add(Message.user("(The roleplay begins.)"))
+      }
+      for ((role, content) in history) {
+        if (content.isBlank()) continue
+        messages.add(if (role == "user") Message.user(content) else Message.model(content))
+      }
+
+      val newConversation =
+        instance.engine.createConversation(
+          ConversationConfig(
+            samplerConfig =
+              if (accelerator == Accelerator.NPU.label) {
+                null
+              } else {
+                SamplerConfig(
+                  topK = topK,
+                  topP = topP.toDouble(),
+                  temperature = temperature.toDouble(),
+                )
+              },
+            systemInstruction = systemInstruction,
+            initialMessages = messages,
+          )
+        )
+      instance.conversation = newConversation
+      Log.d(TAG, "Reset with history done")
+    } catch (e: Exception) {
+      Log.e(TAG, "Failed to reset conversation with history", e)
+    }
+  }
+
   override fun cleanUp(model: Model, onDone: () -> Unit) {
     if (model.instance == null) {
       return

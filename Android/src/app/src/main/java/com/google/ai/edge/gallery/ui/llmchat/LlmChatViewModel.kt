@@ -21,6 +21,8 @@ import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.google.ai.edge.gallery.data.ConfigKeys
+import com.google.ai.edge.gallery.data.DEFAULT_MAX_TOKEN
+import com.google.ai.edge.gallery.data.characters.ContextWindowPlanner
 import com.google.ai.edge.gallery.data.Model
 import com.google.ai.edge.gallery.data.Task
 import com.google.ai.edge.gallery.data.local.ChatRepository
@@ -80,48 +82,99 @@ open class LlmChatViewModelBase() : ChatViewModel() {
     }
   }
 
-  // Roleplay: Box guardaba el prompt de sistema pero no se lo pasaba al modelo. Aquí se aplica
-  // (una vez por instancia del modelo y cada vez que el prompt cambia) antes de generar.
-  private val appliedSystemPrompts = mutableMapOf<String, Pair<Any, String>>()
+  // ---------------------------------------------------------------------------------------------
+  // Roleplay: prompt de sistema, historial y ventana deslizante de contexto.
+  // Box guardaba el prompt de sistema pero no se lo pasaba al modelo; aquí se aplica antes de cada
+  // respuesta. La ventana (como la de Layla) borra los mensajes más viejos cuando el contexto se
+  // llena, para que el chat pueda seguir "infinito".
+  // ---------------------------------------------------------------------------------------------
+
+  /** Estado de la ventana de LiteRT para un modelo: qué ve el motor ahora mismo. */
+  private class LiteRtWindowState(
+    val instance: Any,
+    val prompt: String,
+    val dropped: Int,
+    val previousSize: Int,
+  )
+
+  private val liteRtWindows = mutableMapOf<String, LiteRtWindowState>()
+
+  /** Mensajes de texto anteriores al que se envía ahora (sin el último mensaje del usuario). */
+  private fun previousTexts(model: Model): List<ChatMessageText> {
+    val texts =
+      (uiState.value.messagesByModel[model.name] ?: emptyList())
+        .filter { it.type == ChatMessageType.TEXT && it.side != ChatSide.SYSTEM }
+        .filterIsInstance<ChatMessageText>()
+    return if (texts.lastOrNull()?.side == ChatSide.USER) texts.dropLast(1) else texts
+  }
 
   private fun applySystemPromptIfNeeded(model: Model, input: String) {
-    // GGUF (llama.cpp): antes de cada respuesta se deja el historial nativo igual al de la pantalla
-    // (personaje + mensajes anteriores). La ventana deslizante de contexto trabaja sobre eso.
     val helper = model.runtimeHelper
-    if (helper is com.google.ai.edge.gallery.runtime.LlamaCppModelHelper) {
-      try {
-        val texts =
-          (uiState.value.messagesByModel[model.name] ?: emptyList())
-            .filter { it.type == ChatMessageType.TEXT && it.side != ChatSide.SYSTEM }
-            .filterIsInstance<ChatMessageText>()
-        // El último mensaje del usuario es el que se envía ahora; el motor lo agrega aparte.
-        val previous =
-          if (texts.lastOrNull()?.side == ChatSide.USER) texts.dropLast(1) else texts
+    val prompt = _currentSystemPrompt.value
+    try {
+      val previous = previousTexts(model)
+
+      // GGUF (llama.cpp): el historial nativo se deja igual al de la pantalla; la ventana
+      // deslizante y la caché de prefijo trabajan dentro del motor nativo.
+      if (helper is com.google.ai.edge.gallery.runtime.LlamaCppModelHelper) {
         val history =
           previous.map { (if (it.side == ChatSide.USER) "user" else "assistant") to it.content }
-        helper.seedConversation(model, _currentSystemPrompt.value, history)
-      } catch (e: Exception) {
-        Log.e(TAG, "Failed to seed GGUF conversation", e)
+        helper.seedConversation(model, prompt, history)
+        return
       }
-      return
-    }
-    val prompt = _currentSystemPrompt.value
-    val instance = model.instance ?: return
-    if (prompt.isBlank()) return
-    // Solo LiteRT-LM: en GGUF reiniciar la conversación recarga el modelo.
-    if (model.runtimeHelper !is com.google.ai.edge.gallery.ui.llmchat.LlmChatModelHelper) return
-    val applied = appliedSystemPrompts[model.name]
-    if (applied != null && applied.first === instance && applied.second == prompt) return
-    try {
-      model.runtimeHelper.resetConversation(
-        model = model,
-        supportImage = model.llmSupportImage,
-        supportAudio = model.llmSupportAudio,
-        systemInstruction = Contents.of(prompt),
-      )
-      appliedSystemPrompts[model.name] = Pair(instance, prompt)
+
+      // LiteRT-LM: la conversación vive dentro del motor y no se puede recortar, así que cuando
+      // se llena se reinicia con el prompt del personaje + los mensajes más recientes.
+      if (helper !is LlmChatModelHelper) return
+      val instance = model.instance ?: return
+      val maxTokens =
+        model.getIntConfigValue(key = ConfigKeys.MAX_TOKENS, defaultValue = DEFAULT_MAX_TOKEN)
+
+      val previousState = liteRtWindows[model.name]
+      // Está sincronizado si es el mismo motor y prompt y el motor vio justo el turno anterior.
+      val inSync =
+        previousState != null &&
+          previousState.instance === instance &&
+          previousState.prompt == prompt &&
+          previous.size == previousState.previousSize + 2
+      val alreadyDropped = if (inSync) previousState!!.dropped else 0
+
+      // El saludo del personaje (primer mensaje del asistente) nunca se borra.
+      val keep = if (previous.firstOrNull()?.side == ChatSide.AGENT) 1 else 0
+      val visible = previous.take(keep) + previous.drop(keep + alreadyDropped)
+      val extraDrop =
+        ContextWindowPlanner.planDrop(
+          systemTokens = ContextWindowPlanner.estimateTokens(prompt),
+          history = visible.map { it.content },
+          inputTokens = ContextWindowPlanner.estimateTokens(input),
+          keep = keep,
+          maxTokens = maxTokens,
+        )
+      val dropped = alreadyDropped + extraDrop
+      val needsReset = extraDrop > 0 || (!inSync && (prompt.isNotBlank() || previous.isNotEmpty()))
+
+      if (needsReset) {
+        val window = previous.take(keep) + previous.drop(keep + dropped)
+        helper.resetConversationWithHistory(
+          model = model,
+          supportImage = model.llmSupportImage,
+          supportAudio = model.llmSupportAudio,
+          systemInstruction = if (prompt.isBlank()) null else Contents.of(prompt),
+          history = window.map { (if (it.side == ChatSide.USER) "user" else "assistant") to it.content },
+        )
+        if (extraDrop > 0) {
+          Log.d(TAG, "Context window: dropped $extraDrop old messages (total dropped $dropped)")
+        }
+      }
+      liteRtWindows[model.name] =
+        LiteRtWindowState(
+          instance = instance,
+          prompt = prompt,
+          dropped = dropped,
+          previousSize = previous.size,
+        )
     } catch (e: Exception) {
-      Log.e(TAG, "Failed to apply system prompt", e)
+      Log.e(TAG, "Failed to prepare the conversation", e)
     }
   }
 

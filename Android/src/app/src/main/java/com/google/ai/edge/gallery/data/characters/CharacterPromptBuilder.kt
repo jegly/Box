@@ -12,10 +12,12 @@ import kotlin.random.Random
 object CharacterPromptBuilder {
     const val DEFAULT_USER_NAME = "User"
 
-    /** Instrucción base cuando la tarjeta no trae system_prompt propio. */
+    /**
+     * Instrucción base cuando la tarjeta no trae system_prompt propio. Corta a propósito: los
+     * modelos pequeños siguen mejor un prompt directo (como el de Layla) que uno largo.
+     */
     const val DEFAULT_INSTRUCTION =
-        "Write {{char}}'s next reply in a never-ending roleplay between {{char}} and {{user}}. " +
-            "Stay in character and write only as {{char}}; never speak, think or act for {{user}}. " +
+        "Write only {{char}}'s next reply. Never speak, think or act for {{user}}. " +
             "Reply in the language {{user}} writes in."
 
     class BuiltPrompt(
@@ -43,29 +45,36 @@ object CharacterPromptBuilder {
         userName: String = DEFAULT_USER_NAME,
         defaultInstruction: String = DEFAULT_INSTRUCTION,
         userDescription: String = "",
+        impression: String = "",
     ): BuiltPrompt {
         val charName = card.name.trim().ifEmpty { "Character" }
         val user = userName.trim().ifEmpty { DEFAULT_USER_NAME }
         fun resolve(text: String): String = applyMacros(text, charName, user).trim()
 
+        // Texto plano, sin markdown (#, *, etc.): así lo arma Layla y los modelos pequeños lo
+        // siguen mejor. Orden: [prompt propio de la tarjeta] info del usuario, descripción,
+        // personalidad, escenario, impresión, ejemplos, y al final la frase de identidad.
         val customSystem = card.systemPrompt.trim()
-        val main = if (customSystem.isEmpty()) {
-            defaultInstruction
-        } else {
-            ORIGINAL.replace(customSystem) { defaultInstruction }
-        }
+        val hasCustom = customSystem.isNotEmpty()
 
-        val parts = mutableListOf(resolve(main))
-        resolve(card.description).takeIf { it.isNotEmpty() }
-            ?.let { parts += "### Character: $charName\n$it" }
-        resolve(card.personality).takeIf { it.isNotEmpty() }
-            ?.let { parts += "### Personality\n$it" }
-        resolve(card.scenario).takeIf { it.isNotEmpty() }
-            ?.let { parts += "### Scenario\n$it" }
+        val parts = mutableListOf<String>()
+        if (hasCustom) {
+            parts += resolve(ORIGINAL.replace(customSystem) { defaultInstruction })
+        }
         resolve(userDescription).takeIf { it.isNotEmpty() }
-            ?.let { parts += "### About $user\n$it" }
+            ?.let { parts += "Information about $user: $it" }
+        resolve(card.description).takeIf { it.isNotEmpty() }?.let { parts += it }
+        resolve(card.personality).takeIf { it.isNotEmpty() }?.let { parts += it }
+        resolve(card.scenario).takeIf { it.isNotEmpty() }?.let { parts += it }
+        resolve(impression).takeIf { it.isNotEmpty() }
+            ?.let { parts += "$charName has this impression of $user:\n$it" }
         resolve(START_MARKER.replace(card.exampleMessages) { "\n" }).takeIf { it.isNotEmpty() }
-            ?.let { parts += "### Example dialogue\n$it" }
+            ?.let { parts += "Example dialogue:\n$it" }
+
+        // Frase final: queda al final del prompt para que sea lo más reciente que lee el modelo.
+        val identity = "The User is $user. You ARE $charName. " +
+            "Embody the character and personality completely."
+        parts += if (hasCustom) identity else "$identity ${resolve(defaultInstruction)}"
 
         val greetings = (listOf(card.firstMessage) + card.alternateGreetings)
             .map { resolve(it) }
