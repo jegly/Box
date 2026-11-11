@@ -97,3 +97,16 @@ Java_com_jegly_offlineLLM_smollm_SmolLM_benchModel(JNIEnv* env, jobject /*unused
     std::string result       = llmInference->benchModel(pp, tg, pl, nr);
     return env->NewStringUTF(result.c_str());
 }
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_jegly_offlineLLM_smollm_SmolLM_resetChat(JNIEnv* env, jobject thiz, jlong modelPtr) {
+    auto* llmInference = reinterpret_cast<LLMInference*>(modelPtr);
+    llmInference->resetChat();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_jegly_offlineLLM_smollm_SmolLM_setContextWindow(JNIEnv* env, jobject thiz, jlong modelPtr, jfloat high,
+                                                   jfloat low) {
+    auto* llmInference = reinterpret_cast<LLMInference*>(modelPtr);
+    llmInference->setContextWindow(high, low);
+}

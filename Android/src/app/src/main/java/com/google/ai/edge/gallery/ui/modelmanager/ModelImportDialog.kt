@@ -105,9 +105,10 @@ private val IMPORT_CONFIGS_LLM: List<Config> =
     LabelConfig(key = ConfigKeys.MODEL_TYPE),
     NumberSliderConfig(
       key = ConfigKeys.DEFAULT_MAX_TOKENS,
-      sliderMin = 100f,
-      sliderMax = 4096f,
-      defaultValue = DEFAULT_MAX_TOKEN.toFloat(),
+      sliderMin = 256f,
+      sliderMax = 8192f,
+      // Roleplay: 2048 es el contexto básico que usan Layla y similares.
+      defaultValue = 2048f,
       valueType = ValueType.INT,
     ),
     NumberSliderConfig(

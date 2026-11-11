@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import com.google.ai.edge.gallery.data.ConfigKeys
+import com.google.ai.edge.gallery.data.DEFAULT_MAX_TOKEN
 import com.google.ai.edge.gallery.data.DEFAULT_TEMPERATURE
 import com.google.ai.edge.gallery.data.DEFAULT_TOPK
 import com.google.ai.edge.gallery.data.DEFAULT_TOPP
@@ -48,10 +49,17 @@ object LlamaCppModelHelper : LlmModelHelper {
         val engine = LlamaCppEngine()
         engines[model.name] = engine
 
+        // El tamaño del contexto es el "Max tokens" del modelo (cualquier número). Antes se usaba
+        // el máximo del modelo, que en Gemma es enorme y gasta mucha RAM.
+        val contextSize = model.getIntConfigValue(key = ConfigKeys.MAX_TOKENS, defaultValue = DEFAULT_MAX_TOKEN)
+            .coerceAtLeast(256)
+            .toLong()
+
         val params = SmolLM.InferenceParams(
             temperature = temperature,
             topP = topP,
             topK = topK,
+            contextSize = contextSize,
             numThreads = Runtime.getRuntime().availableProcessors().coerceAtMost(8),
         )
 
@@ -68,6 +76,11 @@ object LlamaCppModelHelper : LlmModelHelper {
                 onDone(e.message ?: "Failed to load GGUF model")
             }
         )
+    }
+
+    /** Roleplay: ver LlamaCppEngine.seedConversation. */
+    fun seedConversation(model: Model, systemPrompt: String, history: List<Pair<String, String>>) {
+        engines[model.name]?.seedConversation(systemPrompt, history)
     }
 
     override fun resetConversation(

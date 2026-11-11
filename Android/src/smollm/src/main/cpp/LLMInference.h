@@ -18,6 +18,10 @@ public:
     void startCompletion(const char *query);
     std::string completionLoop();
     void stopCompletion();
+    // Roleplay: borra el historial y el cache de KV sin recargar el modelo.
+    void resetChat();
+    // Umbrales de la ventana deslizante, como fraccion del contexto (alto > bajo).
+    void setContextWindow(float high, float low);
     std::string benchModel(int pp, int tg, int pl, int nr);
     ~LLMInference();
 
@@ -42,6 +46,18 @@ private:
     int _nCtxUsed = 0;
 
     llama_batch g_batch;
+
+    // Tokens que ya estan procesados en el cache de KV (prompt + respuesta). Sirve para no
+    // volver a procesar el prefijo del prompt en cada turno.
+    std::vector<llama_token> _kvTokens;
+    std::vector<llama_token> _pendingPrompt;
+    bool _promptDecoded = false;
+    float _windowHigh = 0.75f;
+    float _windowLow = 0.45f;
+
+    std::vector<llama_token> _tokenizeMessages(const std::vector<llama_chat_message> &msgs);
+    void _applyContextWindow();
+    void _prepareDecode();
 
     static bool _isValidUtf8(const char *response);
 };

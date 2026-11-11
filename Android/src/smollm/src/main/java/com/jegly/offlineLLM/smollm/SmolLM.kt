@@ -130,6 +130,21 @@ class SmolLM {
         addChatMessage("assistant", message)
     }
 
+    /** Borra el historial y el cache del modelo sin recargar los pesos. */
+    fun resetChat() {
+        verifyHandle()
+        resetChat(nativePtr)
+    }
+
+    /**
+     * Ventana deslizante: cuando el prompt supera `high` (fraccion del contexto) se borran los
+     * mensajes mas viejos hasta bajar a `low`. El sistema, el saludo y el ultimo mensaje se conservan.
+     */
+    fun setContextWindow(high: Float, low: Float) {
+        verifyHandle()
+        setContextWindow(nativePtr, high, low)
+    }
+
     fun getResponseGenerationSpeed(): Float {
         verifyHandle()
         return getResponseGenerationSpeed(nativePtr)
@@ -195,5 +210,7 @@ class SmolLM {
     private external fun startCompletion(modelPtr: Long, prompt: String)
     private external fun completionLoop(modelPtr: Long): String
     private external fun stopCompletion(modelPtr: Long)
+    private external fun resetChat(modelPtr: Long)
+    private external fun setContextWindow(modelPtr: Long, high: Float, low: Float)
     private external fun benchModel(modelPtr: Long, pp: Int, tg: Int, pl: Int, nr: Int): String
 }

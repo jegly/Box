@@ -1,4 +1,5 @@
 #include "LLMInference.h"
+#include "ContextWindow.h"
 #include <android/log.h>
 #include <cstring>
 #include <iomanip>
@@ -118,6 +119,129 @@ LLMInference::getContextSizeUsed() const {
     return _nCtxUsed;
 }
 
+std::vector<llama_token>
+LLMInference::_tokenizeMessages(const std::vector<llama_chat_message> &msgs) {
+    int new_len = llama_chat_apply_template(
+        _chatTemplate,
+        msgs.data(),
+        msgs.size(),
+        true,
+        _formattedMessages.data(),
+        _formattedMessages.size()
+    );
+    if (new_len > (int) _formattedMessages.size()) {
+        _formattedMessages.resize(new_len);
+        new_len = llama_chat_apply_template(
+            _chatTemplate,
+            msgs.data(),
+            msgs.size(),
+            true,
+            _formattedMessages.data(),
+            _formattedMessages.size()
+        );
+    }
+
+    if (new_len < 0) {
+        LOGe("llama_chat_apply_template() failed, using fallback formatting");
+        std::stringstream fallback;
+        for (auto &msg: msgs) {
+            fallback << msg.role << ": " << msg.content << "\n";
+        }
+        fallback << _assistantRole << ":";
+        std::string prompt = fallback.str();
+        return common_tokenize(llama_model_get_vocab(_model), prompt, true, true);
+    }
+
+    std::string prompt(_formattedMessages.begin(), _formattedMessages.begin() + new_len);
+    return common_tokenize(llama_model_get_vocab(_model), prompt, true, true);
+}
+
+void
+LLMInference::setContextWindow(float high, float low) {
+    if (high <= 0.0f || high > 1.0f) high = 0.75f;
+    if (low <= 0.0f || low >= high) low = high * 0.6f;
+    _windowHigh = high;
+    _windowLow = low;
+}
+
+void
+LLMInference::resetChat() {
+    for (llama_chat_message &message: _messages) {
+        free(const_cast<char *>(message.role));
+        free(const_cast<char *>(message.content));
+    }
+    _messages.clear();
+    _kvTokens.clear();
+    _pendingPrompt.clear();
+    _response.clear();
+    _cacheResponseTokens.clear();
+    _nCtxUsed = 0;
+    if (_ctx) llama_memory_clear(llama_get_memory(_ctx), false);
+}
+
+// Ventana deslizante: si el prompt pasa del umbral alto, borra los mensajes mas viejos
+// (conservando el sistema, el saludo y el ultimo mensaje) hasta bajar al umbral bajo.
+void
+LLMInference::_applyContextWindow() {
+    const int nCtx = (int) llama_n_ctx(_ctx);
+    const int high = (int) (nCtx * _windowHigh);
+    const int low = (int) (nCtx * _windowLow);
+
+    std::vector<std::string> roles;
+    roles.reserve(_messages.size());
+    for (auto &m: _messages) roles.emplace_back(m.role);
+    const size_t keep = ctxwin::protectedPrefix(roles, _assistantRole);
+
+    auto tokensAfterDrop = [&](size_t drop) -> int {
+        std::vector<llama_chat_message> subset(_messages.begin(), _messages.begin() + keep);
+        subset.insert(subset.end(), _messages.begin() + keep + drop, _messages.end());
+        return (int) _tokenizeMessages(subset).size();
+    };
+
+    const size_t drop = ctxwin::computeDrop(_messages.size(), keep, high, low, tokensAfterDrop);
+    if (drop == 0) return;
+
+    for (size_t i = keep; i < keep + drop; i++) {
+        free(const_cast<char *>(_messages[i].role));
+        free(const_cast<char *>(_messages[i].content));
+    }
+    _messages.erase(_messages.begin() + keep, _messages.begin() + keep + drop);
+    LOGi("context window: dropped %zu old messages (ctx=%d, high=%d, low=%d)", drop, nCtx, high, low);
+}
+
+// Reutiliza del cache de KV el prefijo que no cambio y deja en _pendingPrompt solo lo nuevo.
+void
+LLMInference::_prepareDecode() {
+    const int nCtx = (int) llama_n_ctx(_ctx);
+    if ((int) _promptTokens.size() >= nCtx - 16) {
+        throw std::runtime_error(
+            "context size too small for this prompt: increase the context length (max tokens)");
+    }
+
+    llama_memory_t mem = llama_get_memory(_ctx);
+    std::vector<int> cached(_kvTokens.begin(), _kvTokens.end());
+    std::vector<int> prompt(_promptTokens.begin(), _promptTokens.end());
+    size_t common = ctxwin::reusablePrefix(cached, prompt);
+
+    if (common < _kvTokens.size()) {
+        if (!llama_memory_seq_rm(mem, 0, (llama_pos) common, -1)) {
+            // Algunos caches (p. ej. ventana deslizante de Gemma) no permiten borrar a medias.
+            llama_memory_clear(mem, false);
+            _kvTokens.clear();
+            common = 0;
+        } else {
+            _kvTokens.resize(common);
+        }
+    }
+
+    _pendingPrompt.assign(_promptTokens.begin() + common, _promptTokens.end());
+    delete _batch;
+    _batch = new llama_batch();
+    _batch->token = _pendingPrompt.data();
+    _batch->n_tokens = _pendingPrompt.size();
+    _promptDecoded = false;
+}
+
 void
 LLMInference::startCompletion(const char *query) {
     if (!_storeChats) {
@@ -128,51 +252,17 @@ LLMInference::startCompletion(const char *query) {
     _responseNumTokens = 0;
     _response.clear();
     _cacheResponseTokens.clear();
-    
+
     std::string queryString(query);
     if (queryString.find("<turn|") != std::string::npos || queryString.find("<start_of_turn>") != std::string::npos) {
-         _promptTokens = common_tokenize(llama_model_get_vocab(_model), queryString, true, true);
+        _promptTokens = common_tokenize(llama_model_get_vocab(_model), queryString, true, true);
     } else {
         addChatMessage(query, "user");
-
-        int new_len = llama_chat_apply_template(
-            _chatTemplate,
-            _messages.data(),
-            _messages.size(),
-            true,
-            _formattedMessages.data(),
-            _formattedMessages.size()
-        );
-        if (new_len > (int)_formattedMessages.size()) {
-            _formattedMessages.resize(new_len);
-            new_len = llama_chat_apply_template(
-                _chatTemplate,
-                _messages.data(),
-                _messages.size(),
-                true,
-                _formattedMessages.data(),
-                _formattedMessages.size()
-            );
-        }
-        
-        if (new_len < 0) {
-            LOGe("llama_chat_apply_template() failed, using fallback formatting");
-            std::stringstream fallback;
-            for (auto &msg : _messages) {
-                fallback << msg.role << ": " << msg.content << "\n";
-            }
-            fallback << _assistantRole << ":";
-            std::string prompt = fallback.str();
-            _promptTokens = common_tokenize(llama_model_get_vocab(_model), prompt, true, true);
-        } else {
-            std::string prompt(_formattedMessages.begin(), _formattedMessages.begin() + new_len);
-            _promptTokens = common_tokenize(llama_model_get_vocab(_model), prompt, true, true);
-        }
+        _applyContextWindow();
+        _promptTokens = _tokenizeMessages(_messages);
     }
 
-    _batch = new llama_batch();
-    _batch->token = _promptTokens.data();
-    _batch->n_tokens = _promptTokens.size();
+    _prepareDecode();
 }
 
 bool
@@ -210,13 +300,24 @@ LLMInference::completionLoop() {
     uint32_t contextSize = llama_n_ctx(_ctx);
     _nCtxUsed = llama_memory_seq_pos_max(llama_get_memory(_ctx), 0) + 1;
     if (_nCtxUsed + _batch->n_tokens > contextSize) {
+        if (_promptDecoded) {
+            // Se acabo el contexto a mitad de la respuesta: se termina limpiamente, sin error.
+            if (!_response.empty()) addChatMessage(_response.c_str(), "assistant");
+            _response.clear();
+            return "[EOG]";
+        }
         throw std::runtime_error("context size reached");
     }
 
     auto start = ggml_time_us();
     if (llama_decode(_ctx, *_batch) < 0) {
+        // El cache pudo quedar a medias: se descarta para que el siguiente turno parta limpio.
+        _kvTokens.clear();
+        llama_memory_clear(llama_get_memory(_ctx), false);
         throw std::runtime_error("llama_decode() failed");
     }
+    _promptDecoded = true;
+    for (int i = 0; i < _batch->n_tokens; i++) _kvTokens.push_back(_batch->token[i]);
 
     _currToken = llama_sampler_sample(_sampler, _ctx, -1);
     
@@ -239,7 +340,7 @@ LLMInference::completionLoop() {
     }
 
     if (is_eog) {
-        addChatMessage(strdup(_response.data()), "assistant");
+        addChatMessage(_response.c_str(), "assistant");
         _response.clear();
         return "[EOG]";
     }

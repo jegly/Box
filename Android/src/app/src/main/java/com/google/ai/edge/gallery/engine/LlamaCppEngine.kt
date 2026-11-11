@@ -20,6 +20,14 @@ import kotlin.time.measureTime
  */
 class LlamaCppEngine {
 
+    companion object {
+        /** Al pasar de este porcentaje del contexto se limpian los mensajes más viejos... */
+        const val CONTEXT_WINDOW_HIGH = 0.75f
+
+        /** ...hasta bajar a este porcentaje (como Layla: 75 % -> ~45 %). */
+        const val CONTEXT_WINDOW_LOW = 0.45f
+    }
+
     private var instance = SmolLM()
     private val stateLock = ReentrantLock()
 
@@ -69,6 +77,7 @@ class LlamaCppEngine {
             loadJob = CoroutineScope(Dispatchers.Default).launch {
                 try {
                     instance.load(modelPath, params)
+                    instance.setContextWindow(CONTEXT_WINDOW_HIGH, CONTEXT_WINDOW_LOW)
 
                     if (systemPrompt.isNotBlank()) {
                         instance.addSystemPrompt(systemPrompt)
@@ -128,6 +137,7 @@ class LlamaCppEngine {
                     instance.close()
                     instance = SmolLM()
                     instance.load(modelPath, params)
+                    instance.setContextWindow(CONTEXT_WINDOW_HIGH, CONTEXT_WINDOW_LOW)
 
                     if (systemPrompt.isNotBlank()) {
                         instance.addSystemPrompt(systemPrompt)
@@ -141,6 +151,28 @@ class LlamaCppEngine {
                     isModelLoaded.set(false)
                     withContext(Dispatchers.Main) { onError(e) }
                 }
+            }
+        }
+    }
+
+    /**
+     * Roleplay: deja el historial nativo igual al que se ve en pantalla (prompt de sistema + mensajes
+     * anteriores, sin el mensaje nuevo). Se llama antes de cada respuesta, así el personaje siempre
+     * está presente y las ediciones/borrados de mensajes se respetan. Es barato: el modelo reutiliza
+     * lo ya procesado y solo calcula lo que cambió.
+     *
+     * Roles: "user" y "assistant". No hace nada si el modelo está ocupado.
+     */
+    fun seedConversation(systemPrompt: String, history: List<Pair<String, String>>) {
+        stateLock.withLock {
+            if (!isModelLoaded.get() || isGenerating) return
+            instance.resetChat()
+            lastSystemPrompt = systemPrompt
+            if (systemPrompt.isNotBlank()) {
+                instance.addSystemPrompt(systemPrompt)
+            }
+            for ((role, content) in history) {
+                if (content.isNotBlank()) instance.addChatMessage(role, content)
             }
         }
     }

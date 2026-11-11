@@ -84,7 +84,27 @@ open class LlmChatViewModelBase() : ChatViewModel() {
   // (una vez por instancia del modelo y cada vez que el prompt cambia) antes de generar.
   private val appliedSystemPrompts = mutableMapOf<String, Pair<Any, String>>()
 
-  private fun applySystemPromptIfNeeded(model: Model) {
+  private fun applySystemPromptIfNeeded(model: Model, input: String) {
+    // GGUF (llama.cpp): antes de cada respuesta se deja el historial nativo igual al de la pantalla
+    // (personaje + mensajes anteriores). La ventana deslizante de contexto trabaja sobre eso.
+    val helper = model.runtimeHelper
+    if (helper is com.google.ai.edge.gallery.runtime.LlamaCppModelHelper) {
+      try {
+        val texts =
+          (uiState.value.messagesByModel[model.name] ?: emptyList())
+            .filter { it.type == ChatMessageType.TEXT && it.side != ChatSide.SYSTEM }
+            .filterIsInstance<ChatMessageText>()
+        // El último mensaje del usuario es el que se envía ahora; el motor lo agrega aparte.
+        val previous =
+          if (texts.lastOrNull()?.side == ChatSide.USER) texts.dropLast(1) else texts
+        val history =
+          previous.map { (if (it.side == ChatSide.USER) "user" else "assistant") to it.content }
+        helper.seedConversation(model, _currentSystemPrompt.value, history)
+      } catch (e: Exception) {
+        Log.e(TAG, "Failed to seed GGUF conversation", e)
+      }
+      return
+    }
     val prompt = _currentSystemPrompt.value
     val instance = model.instance ?: return
     if (prompt.isBlank()) return
@@ -264,7 +284,7 @@ open class LlmChatViewModelBase() : ChatViewModel() {
       }
       delay(500)
 
-      applySystemPromptIfNeeded(model)
+      applySystemPromptIfNeeded(model, input)
 
       // Run inference.
       val audioClips: MutableList<ByteArray> = mutableListOf()
