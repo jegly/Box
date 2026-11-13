@@ -40,6 +40,7 @@ import com.google.ai.edge.gallery.ui.common.chat.ChatMessageType
 import com.google.ai.edge.gallery.ui.common.chat.ChatMessageWarning
 import com.google.ai.edge.gallery.ui.common.chat.ChatSide
 import com.google.ai.edge.gallery.ui.common.chat.ChatViewModel
+import com.google.ai.edge.gallery.ui.common.chat.SwipeState
 import com.google.ai.edge.gallery.ui.modelmanager.ModelManagerViewModel
 import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.ExperimentalApi
@@ -61,6 +62,134 @@ open class LlmChatViewModelBase() : ChatViewModel() {
   override lateinit var chatRepository: ChatRepository
   private var currentConversationId: String? = null
   private val conversationMutex = Mutex()
+
+  // ---------------------------------------------------------------------------------------------
+  // Roleplay: regenerar, swipes y editar mensajes.
+  // ---------------------------------------------------------------------------------------------
+  override val supportsMessageTools: Boolean = true
+
+  private val _swipeState = MutableStateFlow(SwipeState())
+  override val swipeState: StateFlow<SwipeState> = _swipeState.asStateFlow()
+
+  // Para regenerar con los mismos ajustes del último envío.
+  private var lastAllowThinking = false
+
+  override fun refreshMessageTools() {
+    val convId = currentConversationId ?: return
+    val repo = chatRepository ?: return
+    viewModelScope.launch(Dispatchers.IO) {
+      try {
+        val info = repo.swipeInfo(convId)
+        _swipeState.value = if (info == null) SwipeState() else SwipeState(info.first, info.second)
+      } catch (e: Exception) {
+        Log.e(TAG, "Failed to read swipe info", e)
+      }
+    }
+  }
+
+  /** Índice del último mensaje de texto del usuario en pantalla, o -1. */
+  private fun lastUserTextIndex(model: Model): Int =
+    (uiState.value.messagesByModel[model.name] ?: emptyList()).indexOfLast {
+      it.type == ChatMessageType.TEXT && it.side == ChatSide.USER
+    }
+
+  override fun regenerateLast(model: Model, onError: (String) -> Unit) {
+    if (uiState.value.inProgress) return
+    val messages = uiState.value.messagesByModel[model.name] ?: return
+    val userIndex = lastUserTextIndex(model)
+    if (userIndex < 0) return // Solo hay saludo: no hay nada que regenerar.
+    val userMessage = messages[userIndex] as? ChatMessageText ?: return
+    // Quita todo lo que vino después del último mensaje del usuario (respuesta, pensamiento, errores).
+    while ((uiState.value.messagesByModel[model.name]?.size ?: 0) > userIndex + 1) {
+      removeLastMessage(model = model)
+    }
+    // El motor debe volver a verse "desde el principio del turno": se invalida su estado.
+    liteRtWindows.remove(model.name)
+    generateResponse(
+      model = model,
+      input = userMessage.content,
+      onError = onError,
+      allowThinking = lastAllowThinking,
+      persistInput = false,
+      regenerate = true,
+    )
+  }
+
+  override fun swipeLast(model: Model, delta: Int, onError: (String) -> Unit) {
+    if (uiState.value.inProgress) return
+    val state = _swipeState.value
+    // Pasar de la última versión hacia la derecha genera una nueva.
+    if (delta > 0 && state.index >= state.count - 1) {
+      regenerateLast(model, onError)
+      return
+    }
+    if (delta < 0 && state.index <= 0) return
+    val convId = currentConversationId ?: return
+    val repo = chatRepository ?: return
+    viewModelScope.launch(Dispatchers.IO) {
+      try {
+        val updated = conversationMutex.withLock { repo.moveSwipe(convId, delta) } ?: return@launch
+        val messages = uiState.value.messagesByModel[model.name] ?: return@launch
+        val index = messages.indexOfLast { it.type == ChatMessageType.TEXT && it.side != ChatSide.SYSTEM }
+        val old = messages.getOrNull(index) as? ChatMessageText ?: return@launch
+        if (old.side != ChatSide.AGENT) return@launch
+        replaceMessage(
+          model = model,
+          index = index,
+          message =
+            ChatMessageText(
+              content = updated.content,
+              side = ChatSide.AGENT,
+              latencyMs = updated.latencyMs.toFloat(),
+              accelerator = old.accelerator,
+              isMarkdown = old.isMarkdown,
+              hideSenderLabel = old.hideSenderLabel,
+            ),
+        )
+        liteRtWindows.remove(model.name)
+        refreshMessageTools()
+      } catch (e: Exception) {
+        Log.e(TAG, "Failed to swipe", e)
+      }
+    }
+  }
+
+  override fun editMessage(model: Model, message: ChatMessageText, newText: String) {
+    val text = newText.trim()
+    if (text.isEmpty() || text == message.content || uiState.value.inProgress) return
+    val messages = uiState.value.messagesByModel[model.name] ?: return
+    val index = messages.indexOf(message)
+    if (index < 0) return
+    // Posición entre los mensajes de usuario/asistente, para encontrar el mismo en la base de datos.
+    val position =
+      messages.subList(0, index).count { it.type == ChatMessageType.TEXT && it.side != ChatSide.SYSTEM }
+    replaceMessage(
+      model = model,
+      index = index,
+      message =
+        ChatMessageText(
+          content = text,
+          side = message.side,
+          latencyMs = message.latencyMs,
+          accelerator = message.accelerator,
+          isMarkdown = message.isMarkdown,
+          hideSenderLabel = message.hideSenderLabel,
+        ),
+    )
+    // Para GGUF el historial se rearma desde la pantalla en cada turno; LiteRT necesita invalidar.
+    liteRtWindows.remove(model.name)
+    val convId = currentConversationId ?: return
+    val repo = chatRepository ?: return
+    val role = if (message.side == ChatSide.USER) "user" else "assistant"
+    viewModelScope.launch(Dispatchers.IO) {
+      try {
+        conversationMutex.withLock { repo.editMessageAt(convId, position, role, text) }
+        refreshMessageTools()
+      } catch (e: Exception) {
+        Log.e(TAG, "Failed to persist edited message", e)
+      }
+    }
+  }
 
   private val _currentSystemPrompt = MutableStateFlow("")
   val currentSystemPrompt: StateFlow<String> = _currentSystemPrompt.asStateFlow()
@@ -268,7 +397,12 @@ open class LlmChatViewModelBase() : ChatViewModel() {
   /**
    * Box: Persist an assistant response to the encrypted database.
    */
-  private fun persistAssistantMessage(model: Model, content: String, latencyMs: Long = 0) {
+  private fun persistAssistantMessage(
+    model: Model,
+    content: String,
+    latencyMs: Long = 0,
+    asSwipe: Boolean = false,
+  ) {
     val repo = chatRepository ?: return
     Log.d(TAG, "Attempting to persist assistant message for model: ${model.name}")
     viewModelScope.launch(Dispatchers.IO) {
@@ -281,6 +415,14 @@ open class LlmChatViewModelBase() : ChatViewModel() {
             return@withLock
           }
           
+          if (asSwipe) {
+            // Regeneración: la respuesta nueva es otra versión de la última respuesta guardada.
+            if (repo.addSwipe(convId, content, latencyMs) != null) {
+              refreshMessageTools()
+              return@withLock
+            }
+          }
+
           try {
             repo.saveMessage(
               conversationId = convId,
@@ -288,6 +430,7 @@ open class LlmChatViewModelBase() : ChatViewModel() {
               content = content,
               latencyMs = latencyMs,
             )
+            refreshMessageTools()
             Log.d(TAG, "Successfully persisted assistant message to conversation: $convId")
           } catch (fkException: android.database.sqlite.SQLiteConstraintException) {
             Log.w(TAG, "Foreign key constraint failed for assistant message, conversation might not be committed yet. Retrying...", fkException)
@@ -317,14 +460,18 @@ open class LlmChatViewModelBase() : ChatViewModel() {
     onDone: () -> Unit = {},
     onError: (String) -> Unit,
     allowThinking: Boolean = false,
+    // Regenerar: el mensaje del usuario ya existe (no se guarda otra vez) y la respuesta es un swipe.
+    persistInput: Boolean = true,
+    regenerate: Boolean = false,
   ) {
     val accelerator = model.getStringConfigValue(key = ConfigKeys.ACCELERATOR, defaultValue = "")
+    lastAllowThinking = allowThinking
     viewModelScope.launch(Dispatchers.Default) {
       setInProgress(true)
       setPreparing(true)
 
       // Box: Persist user message to encrypted DB
-      if (input.isNotEmpty()) {
+      if (persistInput && input.isNotEmpty()) {
         persistUserMessage(model, input)
       }
 
@@ -466,7 +613,12 @@ open class LlmChatViewModelBase() : ChatViewModel() {
                 // Box: Persist assistant response to encrypted DB
                 val assistantMsg = getLastMessageWithTypeAndSide(model, ChatMessageType.TEXT, ChatSide.AGENT)
                 if (assistantMsg is ChatMessageText && assistantMsg.content.isNotEmpty()) {
-                  persistAssistantMessage(model, assistantMsg.content, assistantMsg.latencyMs.toLong())
+                  persistAssistantMessage(
+                    model,
+                    assistantMsg.content,
+                    assistantMsg.latencyMs.toLong(),
+                    asSwipe = regenerate,
+                  )
                 }
               }
             }

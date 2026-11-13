@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.google.ai.edge.gallery.data.local.entities.Message
 import kotlinx.coroutines.flow.Flow
 
@@ -21,6 +22,12 @@ interface MessageDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(messages: List<Message>)
+
+    @Update
+    suspend fun update(message: Message)
+
+    @Query("SELECT * FROM messages WHERE conversationId = :conversationId AND role = 'assistant' ORDER BY timestamp DESC LIMIT 1")
+    suspend fun getLastAssistant(conversationId: String): Message?
 
     @Delete
     suspend fun delete(message: Message)

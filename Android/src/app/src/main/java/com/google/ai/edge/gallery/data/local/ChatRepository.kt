@@ -1,5 +1,6 @@
 package com.google.ai.edge.gallery.data.local
 
+import com.google.ai.edge.gallery.data.characters.Swipes
 import com.google.ai.edge.gallery.data.local.dao.ConversationDao
 import com.google.ai.edge.gallery.data.local.dao.MessageDao
 import com.google.ai.edge.gallery.data.local.entities.Conversation
@@ -105,4 +106,50 @@ class ChatRepository @Inject constructor(
 
     suspend fun deleteMessagesForConversation(conversationId: String) =
         messageDao.deleteAllForConversation(conversationId)
+
+    // --- Swipes y edición (roleplay) ---
+
+    /** Guarda una respuesta nueva como otra versión de la última respuesta del asistente. */
+    suspend fun addSwipe(conversationId: String, text: String, latencyMs: Long = 0): Message? {
+        val last = messageDao.getLastAssistant(conversationId) ?: return null
+        val state = Swipes.withNew(Swipes.decode(last.alternatives, last.content, last.activeIndex), text)
+        val updated = last.copy(
+            content = text,
+            alternatives = Swipes.encode(state.texts),
+            activeIndex = state.index,
+            latencyMs = latencyMs,
+        )
+        messageDao.update(updated)
+        return updated
+    }
+
+    /** (versión activa, total) de la última respuesta del asistente. */
+    suspend fun swipeInfo(conversationId: String): Pair<Int, Int>? {
+        val last = messageDao.getLastAssistant(conversationId) ?: return null
+        val state = Swipes.decode(last.alternatives, last.content, last.activeIndex)
+        return state.index to state.count
+    }
+
+    /** Cambia a la versión anterior (-1) o siguiente (+1). Devuelve el mensaje ya actualizado. */
+    suspend fun moveSwipe(conversationId: String, delta: Int): Message? {
+        val last = messageDao.getLastAssistant(conversationId) ?: return null
+        val state = Swipes.move(Swipes.decode(last.alternatives, last.content, last.activeIndex), delta)
+        val updated = last.copy(content = state.active, activeIndex = state.index)
+        messageDao.update(updated)
+        return updated
+    }
+
+    /**
+     * Edita el texto del mensaje número [position] (contando solo mensajes de usuario y asistente,
+     * en orden). Si el rol no coincide con [expectedRole] no toca nada.
+     */
+    suspend fun editMessageAt(conversationId: String, position: Int, expectedRole: String, newText: String): Boolean {
+        val chat = messageDao.getMessagesForConversationSync(conversationId)
+            .filter { it.role == "user" || it.role == "assistant" }
+        val target = chat.getOrNull(position) ?: return false
+        if (target.role != expectedRole) return false
+        val state = Swipes.replaceActive(Swipes.decode(target.alternatives, target.content, target.activeIndex), newText)
+        messageDao.update(target.copy(content = newText, alternatives = Swipes.encode(state.texts)))
+        return true
+    }
 }

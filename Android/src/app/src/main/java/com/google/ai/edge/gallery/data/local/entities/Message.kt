@@ -26,4 +26,7 @@ data class Message(
     val timestamp: Long = System.currentTimeMillis(),
     val tokenCount: Int = 0,
     val latencyMs: Long = 0,
+    // Swipes: todas las versiones de esta respuesta (lista JSON; vacío = una sola) y cuál está activa.
+    val alternatives: String = "",
+    val activeIndex: Int = 0,
 )

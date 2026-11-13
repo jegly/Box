@@ -28,6 +28,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,11 +51,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -133,6 +138,13 @@ fun ChatPanel(
   val uiState by viewModel.uiState.collectAsState()
   val modelManagerUiState by modelManagerViewModel.uiState.collectAsState()
   val messages = uiState.messagesByModel[selectedModel.name] ?: listOf()
+  // Roleplay: editar mensajes y swipes (solo el chat LLM los activa).
+  val swipeState by viewModel.swipeState.collectAsState()
+  var editTarget by remember { mutableStateOf<ChatMessageText?>(null) }
+  var editText by remember { mutableStateOf("") }
+  LaunchedEffect(messages.size, uiState.inProgress) {
+    if (!uiState.inProgress) viewModel.refreshMessageTools()
+  }
   val streamingMessage = uiState.streamingMessagesByModel[selectedModel.name]
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
@@ -381,7 +393,11 @@ fun ChatPanel(
                     }
                     messageBubbleModifier = messageBubbleModifier.background(backgroundColor)
                   }
-                  if (message is ChatMessageText && message.side == ChatSide.AGENT) {
+                  if (
+                    message is ChatMessageText &&
+                      (message.side == ChatSide.AGENT ||
+                        (viewModel.supportsMessageTools && message.side == ChatSide.USER))
+                  ) {
                     messageBubbleModifier = messageBubbleModifier.combinedClickable(
                       onClick = { showCopyButton = false },
                       onLongClick = {
@@ -453,6 +469,63 @@ fun ChatPanel(
                       horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                       LatencyText(message = message)
+                      if (
+                        viewModel.supportsMessageTools &&
+                          message is ChatMessageText &&
+                          message.content.isNotEmpty() &&
+                          !uiState.inProgress
+                      ) {
+                        val lastText =
+                          messages.lastOrNull {
+                            it.type == ChatMessageType.TEXT && it.side != ChatSide.SYSTEM
+                          }
+                        // Swipes solo en la última respuesta, y solo si hay un mensaje tuyo antes.
+                        val hasUserBefore =
+                          messages.any { it.type == ChatMessageType.TEXT && it.side == ChatSide.USER }
+                        if (message === lastText && hasUserBefore) {
+                          Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                          ) {
+                            Text(
+                              "‹",
+                              modifier =
+                                Modifier.clickable(enabled = swipeState.index > 0) {
+                                    viewModel.swipeLast(selectedModel, -1) { }
+                                  }
+                                  .padding(horizontal = 10.dp, vertical = 2.dp),
+                              style = MaterialTheme.typography.titleLarge,
+                              color =
+                                if (swipeState.index > 0) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outlineVariant,
+                            )
+                            Text(
+                              "${swipeState.index + 1}/${swipeState.count}",
+                              style = MaterialTheme.typography.labelMedium,
+                            )
+                            // En la última versión, "›" genera una respuesta nueva.
+                            Text(
+                              "›",
+                              modifier =
+                                Modifier.clickable { viewModel.swipeLast(selectedModel, 1) { } }
+                                  .padding(horizontal = 10.dp, vertical = 2.dp),
+                              style = MaterialTheme.typography.titleLarge,
+                              color = MaterialTheme.colorScheme.primary,
+                            )
+                          }
+                        }
+                        if (showCopyButton) {
+                          MessageActionButton(
+                            label = "Edit",
+                            icon = Icons.Outlined.Edit,
+                            onClick = {
+                              editText = message.content
+                              editTarget = message
+                              showCopyButton = false
+                            },
+                          )
+                        }
+                      }
                       if (message is ChatMessageText && message.content.isNotEmpty() && !uiState.inProgress && showCopyButton) {
                         MessageActionButton(
                           label = "Copy",
@@ -470,6 +543,22 @@ fun ChatPanel(
                       verticalAlignment = Alignment.CenterVertically,
                       horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
+                      if (
+                        viewModel.supportsMessageTools &&
+                          message is ChatMessageText &&
+                          !uiState.inProgress &&
+                          showCopyButton
+                      ) {
+                        MessageActionButton(
+                          label = "Edit",
+                          icon = Icons.Outlined.Edit,
+                          onClick = {
+                            editText = message.content
+                            editTarget = message
+                            showCopyButton = false
+                          },
+                        )
+                      }
                       // Run again button.
                       if (selectedModel.showRunAgainButton) {
                         MessageActionButton(
@@ -608,6 +697,33 @@ fun ChatPanel(
   }
 
   // Error dialog.
+  editTarget?.let { target ->
+    AlertDialog(
+      onDismissRequest = { editTarget = null },
+      title = { Text("Editar mensaje") },
+      text = {
+        OutlinedTextField(
+          value = editText,
+          onValueChange = { editText = it },
+          modifier = Modifier.fillMaxWidth(),
+          minLines = 3,
+          maxLines = 12,
+        )
+      },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            viewModel.editMessage(selectedModel, target, editText)
+            editTarget = null
+          }
+        ) {
+          Text("Guardar")
+        }
+      },
+      dismissButton = { TextButton(onClick = { editTarget = null }) { Text("Cancelar") } },
+    )
+  }
+
   if (showErrorDialog) {
     ErrorDialog(
       error = modelInitializationStatus?.error ?: "",

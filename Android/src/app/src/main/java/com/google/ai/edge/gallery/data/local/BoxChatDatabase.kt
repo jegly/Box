@@ -23,7 +23,7 @@ import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
  */
 @Database(
     entities = [Conversation::class, Message::class, RoleplayCharacter::class, UserPersona::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class BoxChatDatabase : RoomDatabase() {
@@ -91,6 +91,14 @@ abstract class BoxChatDatabase : RoomDatabase() {
             }
         }
 
+        // Roleplay: swipes (varias respuestas por mensaje).
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE messages ADD COLUMN alternatives TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE messages ADD COLUMN activeIndex INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile
         private var INSTANCE: BoxChatDatabase? = null
 
@@ -113,7 +121,7 @@ abstract class BoxChatDatabase : RoomDatabase() {
                 DB_NAME
             )
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .fallbackToDestructiveMigration()
                 .build()
         }
