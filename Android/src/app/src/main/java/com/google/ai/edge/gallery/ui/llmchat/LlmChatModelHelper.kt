@@ -42,6 +42,7 @@ import com.google.ai.edge.litertlm.ExperimentalApi
 import com.google.ai.edge.litertlm.ExperimentalFlags
 import com.google.ai.edge.litertlm.Message
 import com.google.ai.edge.litertlm.MessageCallback
+import com.google.ai.edge.litertlm.ModelInfo
 import com.google.ai.edge.litertlm.SamplerConfig
 import com.google.ai.edge.litertlm.ToolProvider
 import java.io.ByteArrayOutputStream
@@ -123,22 +124,45 @@ object LlmChatModelHelper : LlmModelHelper {
       // roleplay es mejor un modelo que carga sin imágenes que un modelo que no carga.
       var created: Engine? = null
       var firstError: Exception? = null
-      val attempts = buildList {
-        add(shouldEnableImage to shouldEnableAudio)
-        if (shouldEnableImage || shouldEnableAudio) add(false to false)
+      // Decodificación especulativa: solo si el usuario la activó y el archivo del modelo la trae.
+      var supportsSpeculative = false
+      try {
+        ModelInfo.from(modelPath).use { modelInfo ->
+          if (modelInfo is ModelInfo.Llm) {
+            supportsSpeculative = modelInfo.hasSpeculativeDecodingSupport()
+          }
+        }
+      } catch (e: Exception) {
+        // Si no se puede leer, se asume que no la soporta.
       }
-      for ((withImage, withAudio) in attempts) {
+      val useSpeculative =
+        supportsSpeculative &&
+          com.google.ai.edge.gallery.data.characters.RoleplaySettingsStore(context)
+            .speculativeDecoding()
+      Log.d(TAG, "Speculative decoding: supported=$supportsSpeculative, enabled=$useSpeculative")
+
+      val attempts = buildList {
+        add(Triple(shouldEnableImage, shouldEnableAudio, useSpeculative))
+        if (useSpeculative) add(Triple(shouldEnableImage, shouldEnableAudio, false))
+        if (shouldEnableImage || shouldEnableAudio) add(Triple(false, false, false))
+      }
+      for ((withImage, withAudio, withSpeculative) in attempts) {
         var candidate: Engine? = null
         try {
+          ExperimentalFlags.enableSpeculativeDecoding = withSpeculative
           candidate = Engine(configFor(withImage, withAudio))
-          candidate.initialize()
+          try {
+            candidate.initialize()
+          } finally {
+            ExperimentalFlags.enableSpeculativeDecoding = false
+          }
           created = candidate
           if (!withImage && shouldEnableImage || !withAudio && shouldEnableAudio) {
             Log.w(TAG, "Engine loaded WITHOUT image/audio after: ${firstError?.message}")
           }
           break
         } catch (e: Exception) {
-          Log.w(TAG, "Engine init failed (image=$withImage, audio=$withAudio): ${e.message}")
+          Log.w(TAG, "Engine init failed (image=$withImage, audio=$withAudio, spec=$withSpeculative): ${e.message}")
           if (firstError == null) firstError = e
           try {
             candidate?.close()

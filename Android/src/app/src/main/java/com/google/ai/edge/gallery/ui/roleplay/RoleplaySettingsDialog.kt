@@ -3,8 +3,10 @@ package com.google.ai.edge.gallery.ui.roleplay
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -42,6 +44,7 @@ fun RoleplaySettingsDialog(
     val context = LocalContext.current
     val store = remember { RoleplaySettingsStore(context) }
     var loreMax by remember { mutableStateOf(store.loreMaxEntries().toString()) }
+    var speculative by remember { mutableStateOf(store.speculativeDecoding()) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Configuración de Roleplay") },
@@ -74,6 +77,20 @@ fun RoleplaySettingsDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                 )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.Switch(
+                        checked = speculative,
+                        onCheckedChange = { speculative = it; store.setSpeculativeDecoding(it) },
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Column {
+                        Text("Decodificación especulativa (LiteRT)", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            "Acelera la respuesta si el modelo la soporta. Se aplica al volver a cargar el modelo.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
                 TextButton(onClick = onOpenSampler) { Text("Ajustes de muestreo (presets)") }
             }
         },

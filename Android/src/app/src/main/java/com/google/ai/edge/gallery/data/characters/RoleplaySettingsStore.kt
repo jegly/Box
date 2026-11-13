@@ -34,7 +34,15 @@ class RoleplaySettingsStore(context: Context) {
     prefs.edit().putInt(KEY_LORE_MAX, n.coerceIn(0, 20)).apply()
   }
 
+  /** Decodificación especulativa de LiteRT-LM (más rápida si el modelo la trae; por defecto no). */
+  fun speculativeDecoding(): Boolean = prefs.getBoolean(KEY_SPECULATIVE, false)
+
+  fun setSpeculativeDecoding(enabled: Boolean) {
+    prefs.edit().putBoolean(KEY_SPECULATIVE, enabled).apply()
+  }
+
   private companion object {
+    const val KEY_SPECULATIVE = "speculative_decoding"
     const val KEY_LORE_MAX = "lore_max_entries"
     const val KEY_MEMORY_MAX = "memory_max_injections"
     const val KEY_MODEL = "default_model"
