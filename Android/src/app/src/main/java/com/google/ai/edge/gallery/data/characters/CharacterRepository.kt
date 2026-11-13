@@ -102,7 +102,6 @@ class CharacterRepository @Inject constructor(
             card = character.toCard(),
             userName = persona?.name ?: CharacterPromptBuilder.DEFAULT_USER_NAME,
             userDescription = persona?.description ?: "",
-            impression = character.impression,
             memory = memoryText,
         )
         val greeting = CharacterPromptBuilder.pickGreeting(built.greetings, random)

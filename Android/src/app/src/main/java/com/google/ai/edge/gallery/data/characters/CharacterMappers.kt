@@ -11,7 +11,6 @@ import kotlinx.serialization.json.JsonPrimitive
 fun CharacterCard.toEntity(
     id: String = UUID.randomUUID().toString(),
     avatarPath: String = "",
-    impression: String = "",
 ): RoleplayCharacter =
     RoleplayCharacter(
         id = id,
@@ -29,7 +28,6 @@ fun CharacterCard.toEntity(
         characterVersion = characterVersion,
         tagsJson = tags.toJsonArrayString(),
         source = source,
-        impression = impression,
         avatarPath = avatarPath,
         extensionsJson = extensionsJson,
         characterBookJson = characterBookJson,

@@ -322,7 +322,6 @@ fun CharacterEditorScreen(
     var description by remember { mutableStateOf("") }
     var personality by remember { mutableStateOf("") }
     var scenario by remember { mutableStateOf("") }
-    var impression by remember { mutableStateOf("") }
     var tags by remember { mutableStateOf("") }
     var firstMessage by remember { mutableStateOf("") }
     val greetings = remember { mutableStateListOf<String>() }
@@ -344,7 +343,6 @@ fun CharacterEditorScreen(
                 description = c.description
                 personality = c.personality
                 scenario = c.scenario
-                impression = c.impression
                 tags = c.tagsJson.toStringList().joinToString(", ")
                 firstMessage = c.firstMessage
                 greetings.clear()
@@ -368,7 +366,6 @@ fun CharacterEditorScreen(
             description = description,
             personality = personality,
             scenario = scenario,
-            impression = impression,
             tagsJson = tags.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toJsonArrayString(),
             firstMessage = firstMessage,
             alternateGreetingsJson = greetings.map { it.trim() }.filter { it.isNotEmpty() }.toJsonArrayString(),
@@ -414,7 +411,6 @@ fun CharacterEditorScreen(
                         BigField("Descripción", description, { description = it }, 6)
                         BigField("Personalidad", personality, { personality = it }, 4)
                         BigField("Escenario", scenario, { scenario = it }, 4)
-                        BigField("Impresión (lo que piensa de ti)", impression, { impression = it }, 3)
                         OutlinedTextField(
                             value = tags, onValueChange = { tags = it },
                             label = { Text("Etiquetas (separadas por coma)") },

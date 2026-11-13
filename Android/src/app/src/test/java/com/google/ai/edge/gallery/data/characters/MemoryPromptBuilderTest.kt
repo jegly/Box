@@ -49,7 +49,7 @@ class MemoryPromptBuilderTest {
         val built = CharacterPromptBuilder.build(card, memory = "Ana remembers previously:\n[1 day ago] algo")
         val p = built.systemPrompt
         assertTrue(p.contains("Ana remembers previously:"))
-        assertTrue(p.indexOf("remembers previously") < p.indexOf("Example dialogue"))
+        assertTrue(p.indexOf("remembers previously") < p.indexOf("[Example Chat]"))
         assertTrue(p.indexOf("remembers previously") > p.indexOf("Una chica"))
     }
 

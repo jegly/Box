@@ -65,8 +65,10 @@ class CharacterPromptBuilderTest {
     fun emptySectionsAreOmitted() {
         val built = CharacterPromptBuilder.build(CharacterCard(name = "Solo"))
         assertFalse(built.systemPrompt.contains("Information about"))
-        assertFalse(built.systemPrompt.contains("Example dialogue"))
+        assertFalse(built.systemPrompt.contains("[Example Chat]"))
         assertFalse(built.systemPrompt.contains("impression"))
+        assertFalse(built.systemPrompt.contains("personality:"))
+        assertFalse(built.systemPrompt.contains("Scenario:"))
         assertEquals(emptyList<String>(), built.greetings)
         assertEquals("", built.postHistoryInstructions)
     }
@@ -78,7 +80,7 @@ class CharacterPromptBuilderTest {
             "Ana",
         )
         assertFalse(built.systemPrompt.contains("<start>", ignoreCase = true))
-        assertTrue(built.systemPrompt.contains("Example dialogue:"))
+        assertTrue(built.systemPrompt.contains("[Example Chat]"))
     }
 
     @Test
@@ -122,16 +124,16 @@ class CharacterPromptBuilderTest {
     }
 
     @Test
-    fun promptIsPlainTextLikeLaylaWithoutMarkdown() {
+    fun promptIsPlainTextWithSillyTavernLabelsAndNoMarkdown() {
         val built = CharacterPromptBuilder.build(
             card.copy(exampleMessages = "<START>\n{{user}}: Hola\n{{char}}: Buenas"),
             userName = "Ana",
             userDescription = "Exploradora",
-            impression = "{{user}} le cae bien.",
         )
         assertFalse(built.systemPrompt.contains("#"))
         assertFalse(built.systemPrompt.contains("**"))
-        assertTrue(built.systemPrompt.contains("Layla has this impression of Ana:\nAna le cae bien."))
+        assertTrue(built.systemPrompt.contains("Layla's personality: Curiosa"))
+        assertTrue(built.systemPrompt.contains("Scenario: Una cafetería"))
     }
 
     @Test
@@ -145,7 +147,7 @@ class CharacterPromptBuilderTest {
         // lo ultimo es la frase de identidad (+ la instruccion corta si no hay prompt propio)
         val idx = built.systemPrompt.indexOf("The User is Ana.")
         assertTrue(idx > built.systemPrompt.indexOf("Una cafetería"))
-        assertTrue(idx > built.systemPrompt.indexOf("Example dialogue:"))
+        assertTrue(idx > built.systemPrompt.indexOf("[Example Chat]"))
     }
 
     @Test

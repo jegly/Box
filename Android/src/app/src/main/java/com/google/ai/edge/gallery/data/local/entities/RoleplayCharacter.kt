@@ -29,6 +29,8 @@ data class RoleplayCharacter(
     val tagsJson: String = "[]",
     val source: String = "",
     // "Impresión" de Layla: resumen de lo que el personaje piensa del usuario (fase 2)
+    // Ya no se usa (se quitó la "impresión" al alinear las tarjetas con SillyTavern); se conserva
+    // la columna para no migrar la base de datos.
     val impression: String = "",
     // Ruta del PNG del avatar dentro del almacenamiento privado de la app ("" = sin avatar)
     val avatarPath: String = "",

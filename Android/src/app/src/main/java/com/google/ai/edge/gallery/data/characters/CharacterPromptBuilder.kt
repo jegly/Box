@@ -45,7 +45,6 @@ object CharacterPromptBuilder {
         userName: String = DEFAULT_USER_NAME,
         defaultInstruction: String = DEFAULT_INSTRUCTION,
         userDescription: String = "",
-        impression: String = "",
         // Bloque ya armado por MemoryPromptBuilder ("" = sin recuerdos).
         memory: String = "",
     ): BuiltPrompt {
@@ -55,7 +54,7 @@ object CharacterPromptBuilder {
 
         // Texto plano, sin markdown (#, *, etc.): así lo arma Layla y los modelos pequeños lo
         // siguen mejor. Orden: [prompt propio de la tarjeta] info del usuario, descripción,
-        // personalidad, escenario, impresión, ejemplos, y al final la frase de identidad.
+        // personalidad, escenario, recuerdos, ejemplos, y al final la frase de identidad.
         val customSystem = card.systemPrompt.trim()
         val hasCustom = customSystem.isNotEmpty()
 
@@ -66,13 +65,13 @@ object CharacterPromptBuilder {
         resolve(userDescription).takeIf { it.isNotEmpty() }
             ?.let { parts += "Information about $user: $it" }
         resolve(card.description).takeIf { it.isNotEmpty() }?.let { parts += it }
-        resolve(card.personality).takeIf { it.isNotEmpty() }?.let { parts += it }
-        resolve(card.scenario).takeIf { it.isNotEmpty() }?.let { parts += it }
-        resolve(impression).takeIf { it.isNotEmpty() }
-            ?.let { parts += "$charName has this impression of $user:\n$it" }
+        // Etiquetas como en el story string por defecto de SillyTavern.
+        resolve(card.personality).takeIf { it.isNotEmpty() }
+            ?.let { parts += "$charName's personality: $it" }
+        resolve(card.scenario).takeIf { it.isNotEmpty() }?.let { parts += "Scenario: $it" }
         memory.trim().takeIf { it.isNotEmpty() }?.let { parts += it }
         resolve(START_MARKER.replace(card.exampleMessages) { "\n" }).takeIf { it.isNotEmpty() }
-            ?.let { parts += "Example dialogue:\n$it" }
+            ?.let { parts += "[Example Chat]\n$it" }
 
         // Frase final: queda al final del prompt para que sea lo más reciente que lee el modelo.
         val identity = "The User is $user. You ARE $charName. " +
