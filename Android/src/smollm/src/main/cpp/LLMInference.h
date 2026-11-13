@@ -23,6 +23,8 @@ public:
     void resetChat();
     // Reconstruye la cadena de muestreo con estos ajustes (se puede llamar entre turnos).
     void setSampler(const SamplerSettings &settings);
+    // Roleplay: activa el canal de pensamiento (Gemma 4, token <|think|>) para el proximo turno.
+    void setThinking(bool enabled);
     // Umbrales de la ventana deslizante, como fraccion del contexto (alto > bajo).
     void setContextWindow(float high, float low);
     std::string benchModel(int pp, int tg, int pl, int nr);
@@ -56,6 +58,7 @@ private:
     std::vector<llama_token> _pendingPrompt;
     bool _promptDecoded = false;
     bool _isGemma4 = false;   // plantilla <|turn> ... <turn|>: se formatea a mano
+    bool _enableThinking = false; // <|think|> al inicio del turno de sistema (Gemma 4)
     float _windowHigh = 0.75f;
     float _windowLow = 0.45f;
 

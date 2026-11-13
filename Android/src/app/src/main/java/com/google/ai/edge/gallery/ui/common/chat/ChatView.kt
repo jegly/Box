@@ -128,13 +128,24 @@ fun ChatView(
     val existingMessages = llmViewModel.uiState.value.messagesByModel[selectedModel.name]
     if (!existingMessages.isNullOrEmpty()) return@LaunchedEffect  // already loaded for this model
 
-    val convId = if (conversationId != null) {
-      conversationId
-    } else if (autoResumeConversation) {
-      llmViewModel.getLatestConversationForModel(selectedModel.name)?.id
-    } else {
-      null
-    }
+    val convId =
+      if (conversationId != null) {
+        conversationId
+      } else if (autoResumeConversation) {
+        // Box: no reanudar por accidente un chat de Roleplay al abrir un modelo desde la lista de
+        // modelos ("Probar modelo" / "Open"). Un chat de personaje solo se abre desde Roleplay,
+        // que pasa conversationId de forma explícita; así "Probar modelo" empieza limpio en vez
+        // de volver al personaje que estaba activo.
+        val latest = llmViewModel.getLatestConversationForModel(selectedModel.name)
+        if (latest?.characterId?.isNotBlank() == true) {
+          Log.d(TAG, "Auto-resume skipped: ${latest.id} belongs to roleplay")
+          null
+        } else {
+          latest?.id
+        }
+      } else {
+        null
+      }
 
     if (convId != null) {
       Log.d(TAG, "Loading conversation history for: $convId (model=${selectedModel.name})")

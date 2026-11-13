@@ -45,6 +45,9 @@ fun RoleplaySettingsDialog(
     val store = remember { RoleplaySettingsStore(context) }
     var loreMax by remember { mutableStateOf(store.loreMaxEntries().toString()) }
     var speculative by remember { mutableStateOf(store.speculativeDecoding()) }
+    // null = aún no se ha comprobado (el modelo se analiza al cargarlo).
+    val speculativeSupport =
+      remember(selectedModel) { store.speculativeSupported(selectedModel) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Configuración de Roleplay") },
@@ -80,14 +83,29 @@ fun RoleplaySettingsDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     androidx.compose.material3.Switch(
                         checked = speculative,
+                        // Si ModelInfo ya dijo que el modelo no la soporta, no tiene sentido dejarlo
+                        // activado en silencio.
+                        enabled = speculativeSupport != false,
                         onCheckedChange = { speculative = it; store.setSpeculativeDecoding(it) },
                     )
                     Spacer(Modifier.width(8.dp))
                     Column {
                         Text("Decodificación especulativa (LiteRT)", style = MaterialTheme.typography.bodyMedium)
                         Text(
-                            "Acelera la respuesta si el modelo la soporta. Se aplica al volver a cargar el modelo.",
+                            when (speculativeSupport) {
+                                false ->
+                                    "El modelo seleccionado no la soporta " +
+                                        "(hasSpeculativeDecodingSupport = false). El interruptor no tendrá efecto."
+                                true ->
+                                    "Este modelo sí la soporta. Se aplica al volver a cargar el modelo."
+                                null ->
+                                    "Acelera la respuesta si el modelo la soporta. Se comprueba al cargar " +
+                                        "el modelo; si no la soporta, el interruptor se desactiva."
+                            },
                             style = MaterialTheme.typography.bodySmall,
+                            color =
+                                if (speculativeSupport == false) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

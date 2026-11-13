@@ -178,13 +178,21 @@ object LlamaCppModelHelper : LlmModelHelper {
             Log.w(TAG, "Image input not supported with llama.cpp engine, ignoring ${images.size} images")
         }
 
+        // Thinking: en LiteRT el flag viaja en extraContext; en llama.cpp hay que aplicarlo al
+        // formatear el prompt (llama.cpp no recibe kwargs de plantilla en esta versión).
+        val enableThinking = extraContext?.get("enable_thinking")?.toBoolean() == true
+        engine.setThinking(enableThinking)
+        Log.i(TAG, "GGUF thinking=${enableThinking} (model=${model.name})")
+
         // Gemma 4: separa el razonamiento en voz alta de la respuesta (ver ThinkingSplitter).
         val splitter =
             if (com.google.ai.edge.gallery.data.characters.ThinkingSplitter.appliesTo(model.name))
                 com.google.ai.edge.gallery.data.characters.ThinkingSplitter()
             else null
         fun emit(out: com.google.ai.edge.gallery.data.characters.ThinkingSplitter.Out) {
-            out.thought?.let { resultListener("", false, it) }
+            // Con thinking desactivado no se muestra el razonamiento aunque el modelo lo escriba:
+            // se descarta y solo se entrega la respuesta.
+            if (enableThinking) out.thought?.let { resultListener("", false, it) }
             if (out.answer.isNotEmpty()) resultListener(out.answer, false, null)
         }
 

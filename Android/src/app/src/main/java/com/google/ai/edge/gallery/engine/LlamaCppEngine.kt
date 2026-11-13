@@ -177,6 +177,15 @@ class LlamaCppEngine {
         }
     }
 
+    /** Roleplay: activa el razonamiento (canal de pensamiento de Gemma 4) en el siguiente turno. */
+    fun setThinking(enabled: Boolean) {
+        if (isGenerating) return
+        stateLock.withLock {
+            if (!isModelLoaded.get()) return
+            instance.setThinking(enabled)
+        }
+    }
+
     fun seedConversation(systemPrompt: String, history: List<Pair<String, String>>) {
         stateLock.withLock {
             if (!isModelLoaded.get() || isGenerating) return

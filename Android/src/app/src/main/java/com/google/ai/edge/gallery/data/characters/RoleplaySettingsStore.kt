@@ -41,8 +41,23 @@ class RoleplaySettingsStore(context: Context) {
     prefs.edit().putBoolean(KEY_SPECULATIVE, enabled).apply()
   }
 
+  /**
+   * Si el modelo cargado reportó soporte de decodificación especulativa
+   * (`ModelInfo.Llm.hasSpeculativeDecodingSupport`). `null` = todavía no se ha comprobado.
+   */
+  fun speculativeSupported(modelName: String?): Boolean? {
+    if (modelName.isNullOrBlank()) return null
+    val key = KEY_SPECULATIVE_SUPPORTED_PREFIX + modelName
+    return if (prefs.contains(key)) prefs.getBoolean(key, false) else null
+  }
+
+  fun setSpeculativeSupported(modelName: String, supported: Boolean) {
+    prefs.edit().putBoolean(KEY_SPECULATIVE_SUPPORTED_PREFIX + modelName, supported).apply()
+  }
+
   private companion object {
     const val KEY_SPECULATIVE = "speculative_decoding"
+    const val KEY_SPECULATIVE_SUPPORTED_PREFIX = "speculative_supported_"
     const val KEY_LORE_MAX = "lore_max_entries"
     const val KEY_MEMORY_MAX = "memory_max_injections"
     const val KEY_MODEL = "default_model"

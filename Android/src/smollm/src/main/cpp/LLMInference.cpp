@@ -114,7 +114,7 @@ LLMInference::_tokenizeMessages(const std::vector<llama_chat_message> &msgs) {
         std::vector<std::pair<std::string, std::string>> items;
         items.reserve(msgs.size());
         for (auto &m: msgs) items.emplace_back(m.role, m.content);
-        std::string prompt = chatfmt::formatGemma4(items);
+        std::string prompt = chatfmt::formatGemma4(items, _enableThinking);
         return common_tokenize(llama_model_get_vocab(_model), prompt, true, true);
     }
     int new_len = llama_chat_apply_template(
@@ -204,6 +204,13 @@ LLMInference::setSampler(const SamplerSettings &settings) {
          settings.temperature, settings.dynTempRange, settings.topK, settings.topP, settings.minP,
          settings.xtcProbability, settings.xtcThreshold, settings.repeatPenalty,
          settings.repeatLastN, settings.dryMultiplier, settings.dryBase, settings.dryAllowedLength);
+}
+
+void
+LLMInference::setThinking(bool enabled) {
+    if (_enableThinking == enabled) return;
+    _enableThinking = enabled;
+    LOGi("thinking: %s", enabled ? "on" : "off");
 }
 
 void

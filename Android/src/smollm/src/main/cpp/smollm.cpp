@@ -105,6 +105,13 @@ Java_com_jegly_offlineLLM_smollm_SmolLM_resetChat(JNIEnv* env, jobject thiz, jlo
 }
 
 extern "C" JNIEXPORT void JNICALL
+Java_com_jegly_offlineLLM_smollm_SmolLM_setThinkingNative(JNIEnv* env, jobject thiz, jlong modelPtr,
+                                                          jboolean enabled) {
+    auto* llmInference = reinterpret_cast<LLMInference*>(modelPtr);
+    llmInference->setThinking(enabled == JNI_TRUE);
+}
+
+extern "C" JNIEXPORT void JNICALL
 Java_com_jegly_offlineLLM_smollm_SmolLM_setContextWindow(JNIEnv* env, jobject thiz, jlong modelPtr, jfloat high,
                                                    jfloat low) {
     auto* llmInference = reinterpret_cast<LLMInference*>(modelPtr);

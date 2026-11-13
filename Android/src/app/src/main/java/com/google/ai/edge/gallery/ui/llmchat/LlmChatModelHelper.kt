@@ -126,20 +126,39 @@ object LlmChatModelHelper : LlmModelHelper {
       var firstError: Exception? = null
       // Decodificación especulativa: solo si el usuario la activó y el archivo del modelo la trae.
       var supportsSpeculative = false
+      var modelInfoLog = "ModelInfo no disponible"
+      val settingsStore =
+        com.google.ai.edge.gallery.data.characters.RoleplaySettingsStore(context)
+      val wantsSpeculative = settingsStore.speculativeDecoding()
       try {
         ModelInfo.from(modelPath).use { modelInfo ->
+          modelInfoLog =
+            "type=${modelInfo.modelType} maxContext=${modelInfo.maxContextTokens}"
           if (modelInfo is ModelInfo.Llm) {
             supportsSpeculative = modelInfo.hasSpeculativeDecodingSupport()
+            modelInfoLog +=
+              " thinking=${modelInfo.supportsThinking()} speculative=$supportsSpeculative"
           }
         }
       } catch (e: Exception) {
-        // Si no se puede leer, se asume que no la soporta.
+        // Si no se puede leer, se asume que no la soporta, pero se deja rastro del motivo.
+        Log.w(TAG, "No se pudo leer ModelInfo de '${model.name}'", e)
       }
-      val useSpeculative =
-        supportsSpeculative &&
-          com.google.ai.edge.gallery.data.characters.RoleplaySettingsStore(context)
-            .speculativeDecoding()
-      Log.d(TAG, "Speculative decoding: supported=$supportsSpeculative, enabled=$useSpeculative")
+      // Se guarda para que RoleplaySettingsDialog pueda avisar/deshabilitar el interruptor.
+      settingsStore.setSpeculativeSupported(model.name, supportsSpeculative)
+      val useSpeculative = supportsSpeculative && wantsSpeculative
+      Log.i(
+        TAG,
+        "Speculative decoding: model='${model.name}' supported=$supportsSpeculative " +
+          "requested=$wantsSpeculative active=$useSpeculative info=[$modelInfoLog]",
+      )
+      if (wantsSpeculative && !supportsSpeculative) {
+        Log.w(
+          TAG,
+          "Decodificación especulativa activada en ajustes pero '${model.name}' no la soporta; " +
+            "se ejecuta sin ella",
+        )
+      }
 
       val attempts = buildList {
         add(Triple(shouldEnableImage, shouldEnableAudio, useSpeculative))
@@ -149,6 +168,10 @@ object LlmChatModelHelper : LlmModelHelper {
       for ((withImage, withAudio, withSpeculative) in attempts) {
         var candidate: Engine? = null
         try {
+          Log.d(
+            TAG,
+            "Creating engine: image=$withImage audio=$withAudio speculative=$withSpeculative",
+          )
           ExperimentalFlags.enableSpeculativeDecoding = withSpeculative
           candidate = Engine(configFor(withImage, withAudio))
           try {
@@ -157,6 +180,15 @@ object LlmChatModelHelper : LlmModelHelper {
             ExperimentalFlags.enableSpeculativeDecoding = false
           }
           created = candidate
+          if (useSpeculative && !withSpeculative) {
+            // El motor no pudo arrancar con decodificación especulativa: se deja constancia y se
+            // desactiva el aviso/switch para este modelo.
+            settingsStore.setSpeculativeSupported(model.name, false)
+            Log.w(
+              TAG,
+              "'${model.name}' no pudo inicializar con decodificación especulativa; se usa el modo normal",
+            )
+          }
           if (!withImage && shouldEnableImage || !withAudio && shouldEnableAudio) {
             Log.w(TAG, "Engine loaded WITHOUT image/audio after: ${firstError?.message}")
           }

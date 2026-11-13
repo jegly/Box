@@ -137,6 +137,16 @@ class SmolLM {
     }
 
     /**
+     * Activa/desactiva el razonamiento (canal de pensamiento de Gemma 4). Con `true` se escribe
+     * `<|think|>` al inicio del turno de sistema y se deja abierto el canal; con `false` no se
+     * escribe y el canal se cierra vacio (respuesta directa).
+     */
+    fun setThinking(enabled: Boolean) {
+        verifyHandle()
+        setThinkingNative(nativePtr, enabled)
+    }
+
+    /**
      * Ventana deslizante: cuando el prompt supera `high` (fraccion del contexto) se borran los
      * mensajes mas viejos hasta bajar a `low`. El sistema, el saludo y el ultimo mensaje se conservan.
      */
@@ -220,6 +230,7 @@ class SmolLM {
     private external fun completionLoop(modelPtr: Long): String
     private external fun stopCompletion(modelPtr: Long)
     private external fun resetChat(modelPtr: Long)
+    private external fun setThinkingNative(modelPtr: Long, enabled: Boolean)
     private external fun setContextWindow(modelPtr: Long, high: Float, low: Float)
     private external fun setSampler(modelPtr: Long, values: FloatArray)
     private external fun benchModel(modelPtr: Long, pp: Int, tg: Int, pl: Int, nr: Int): String

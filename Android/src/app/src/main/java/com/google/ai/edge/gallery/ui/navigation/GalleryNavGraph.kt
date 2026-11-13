@@ -258,7 +258,9 @@ fun GalleryNavHost(
           task = it,
           enableAnimation = enableModelListAnimation,
           onModelClicked = { model ->
-            navController.navigate("$ROUTE_MODEL/${it.id}/${model.name}")
+            // "Probar modelo": chat nuevo, sin reanudar la última conversación del modelo
+            // (que podría ser el chat de un personaje de Roleplay).
+            navController.navigate("$ROUTE_MODEL/${it.id}/${model.name}?autoResume=false")
           },
           navigateUp = {
             enableHomeScreenAnimation = false
@@ -402,7 +404,8 @@ fun GalleryNavHost(
           navController.navigateUp()
         },
         onModelSelected = { task, model ->
-          navController.navigate("$ROUTE_MODEL/${task.id}/${model.name}")
+          // "Probar modelo" desde la pantalla de descarga/importación: siempre chat nuevo.
+          navController.navigate("$ROUTE_MODEL/${task.id}/${model.name}?autoResume=false")
         },
         onBenchmarkClicked = { model ->
           firebaseAnalytics?.logEvent(

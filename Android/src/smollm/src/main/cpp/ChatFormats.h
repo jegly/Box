@@ -29,15 +29,27 @@ inline std::string trimmed(const std::string &s) {
 // Si el primer mensaje tras el sistema es del asistente (el saludo del personaje), se coloca
 // antes un turno de usuario vacio, como hace Layla, para que los roles alternen.
 // El BOS lo agrega el tokenizador; no se escribe aqui.
-inline std::string formatGemma4(const std::vector<std::pair<std::string, std::string>> &messages) {
+//
+// `enableThinking` replica la plantilla canonica de Gemma 4: con thinking activado se escribe el
+// token <|think|> al principio del primer turno de sistema y se deja abierto el canal de
+// pensamiento, para que el modelo razone antes de responder. Con thinking desactivado no se
+// escribe <|think|> y el canal se cierra vacio (respuesta directa).
+inline std::string formatGemma4(const std::vector<std::pair<std::string, std::string>> &messages,
+                                bool enableThinking) {
     std::string out;
     bool lastWasUser = false;
     bool anyTurn = false;
+    bool thinkInjected = false;
     for (const auto &m: messages) {
         const std::string &role = m.first;
         const std::string content = trimmed(m.second);
         if (role == "system") {
-            out += "<|turn>system\n" + content + "<turn|>\n";
+            out += "<|turn>system\n";
+            if (enableThinking && !thinkInjected) {
+                out += "<|think|>\n";
+                thinkInjected = true;
+            }
+            out += content + "<turn|>\n";
         } else if (role == "user") {
             out += "<|turn>user\n" + content + "<turn|>\n";
             lastWasUser = true;
@@ -52,7 +64,12 @@ inline std::string formatGemma4(const std::vector<std::pair<std::string, std::st
         }
     }
     (void) anyTurn;
-    out += "<|turn>model\n<|channel>thought\n<channel|>";
+    // Si no habia turno de sistema, se crea uno vacio para poder inyectar <|think|>.
+    if (enableThinking && !thinkInjected) {
+        out = "<|turn>system\n<|think|>\n<turn|>\n" + out;
+    }
+    out += "<|turn>model\n";
+    out += enableThinking ? "<|channel>thought\n" : "<|channel>thought\n<channel|>";
     return out;
 }
 
