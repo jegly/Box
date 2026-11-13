@@ -439,9 +439,18 @@ fun GalleryNavHost(
       route = "$ROUTE_ROLEPLAY_EDIT/{characterId}",
       arguments = listOf(navArgument("characterId") { type = NavType.StringType }),
     ) { backStackEntry ->
+      val editorUiState by modelManagerViewModel.uiState.collectAsState()
+      val editorModels =
+        modelManagerViewModel.getTaskById(BuiltInTaskId.LLM_CHAT)?.models
+          ?.filter {
+            editorUiState.modelDownloadStatus[it.name]?.status ==
+              com.google.ai.edge.gallery.data.ModelDownloadStatusType.SUCCEEDED
+          }
+          ?.map { it.name } ?: emptyList()
       com.google.ai.edge.gallery.ui.roleplay.CharacterEditorScreen(
         characterId = backStackEntry.arguments?.getString("characterId") ?: "new",
         navigateUp = { navController.navigateUp() },
+        availableModels = editorModels,
       )
     }
 

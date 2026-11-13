@@ -166,8 +166,14 @@ fun RoleplayScreen(
                     CharacterRow(
                         character = c,
                         onChat = {
-                            if (modelName != null) {
-                                viewModel.startChat(c, modelName) { convId -> onOpenChat(modelName, convId) }
+                            // Prioridad: modelo del personaje, luego el predeterminado de Roleplay.
+                            val chatModel = com.google.ai.edge.gallery.data.characters.RoleplayModelResolver.resolve(
+                                characterModel = c.modelName,
+                                defaultModel = defaultModel,
+                                available = availableModels,
+                            )
+                            if (chatModel != null) {
+                                viewModel.startChat(c, chatModel) { convId -> onOpenChat(chatModel, convId) }
                             } else {
                                 // Todavía no hay modelo elegido: se abre la configuración para elegir uno.
                                 showSettings = true
@@ -312,6 +318,8 @@ private fun CharacterRow(
 fun CharacterEditorScreen(
     characterId: String,
     navigateUp: () -> Unit,
+    /** Modelos descargados, para elegir uno propio del personaje. */
+    availableModels: List<String> = emptyList(),
     viewModel: RoleplayViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -333,6 +341,7 @@ fun CharacterEditorScreen(
     var creator by remember { mutableStateOf("") }
     var nameError by remember { mutableStateOf(false) }
     var tab by remember { mutableIntStateOf(0) }
+    var modelName by remember { mutableStateOf("") }
 
     LaunchedEffect(characterId) {
         if (characterId != "new") {
@@ -353,6 +362,7 @@ fun CharacterEditorScreen(
                 postHistory = c.postHistoryInstructions
                 creatorNotes = c.creatorNotes
                 creator = c.creator
+                modelName = c.modelName
             }
             loaded = true
         }
@@ -361,6 +371,7 @@ fun CharacterEditorScreen(
     fun build(): RoleplayCharacter {
         val base = original ?: RoleplayCharacter(name = name)
         return base.copy(
+            modelName = modelName,
             name = name.trim(),
             description = description,
             personality = personality,
@@ -449,6 +460,30 @@ fun CharacterEditorScreen(
                         )
                     }
                     else -> {
+                        Text("Modelo de este personaje", style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            "Si no eliges uno, usa el modelo predeterminado de Roleplay.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        // Un modelo guardado que ya no está descargado se muestra, para poder cambiarlo.
+                        val options = listOf("") + availableModels + listOfNotNull(modelName.takeIf { it.isNotEmpty() && it !in availableModels })
+                        options.forEach { opt ->
+                            Row(
+                                Modifier.fillMaxWidth().clickable { modelName = opt },
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                androidx.compose.material3.RadioButton(selected = modelName == opt, onClick = { modelName = opt })
+                                Text(
+                                    when {
+                                        opt.isEmpty() -> "Predeterminado de Roleplay"
+                                        opt !in availableModels -> "$opt (no disponible)"
+                                        else -> opt
+                                    },
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                        }
                         BigField("Diálogo de ejemplo (usa <START> para separar)", exampleMessages, { exampleMessages = it }, 6)
                         BigField("Prompt de sistema (vacío = el predeterminado)", systemPrompt, { systemPrompt = it }, 4)
                         BigField("Instrucciones posteriores al historial", postHistory, { postHistory = it }, 3)

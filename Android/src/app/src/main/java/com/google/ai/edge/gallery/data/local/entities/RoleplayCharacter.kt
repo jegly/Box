@@ -32,6 +32,8 @@ data class RoleplayCharacter(
     val impression: String = "",
     // Ruta del PNG del avatar dentro del almacenamiento privado de la app ("" = sin avatar)
     val avatarPath: String = "",
+    // Modelo propio de este personaje ("" = el predeterminado de Roleplay)
+    val modelName: String = "",
     val extensionsJson: String = "{}",
     val characterBookJson: String = "",
     val createdAt: Long = System.currentTimeMillis(),
