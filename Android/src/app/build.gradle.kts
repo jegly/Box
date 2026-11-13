@@ -55,6 +55,11 @@ android {
       signingConfig = signingConfigs.getByName("debug")
     }
   }
+  packaging {
+    jniLibs {
+      pickFirsts.add("**/liblitertlm_jni.so")
+    }
+  }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
