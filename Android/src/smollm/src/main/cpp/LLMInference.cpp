@@ -54,28 +54,14 @@ LLMInference::loadModel(const char *model_path, float minP, float temperature, f
         throw std::runtime_error("llama_new_context_with_model() returned null");
     }
 
-    llama_sampler_chain_params sampler_params = llama_sampler_chain_default_params();
-    sampler_params.no_perf = true;
-    _sampler = llama_sampler_chain_init(sampler_params);
-
-    if (repeatPenalty > 1.0f) {
-        llama_sampler_chain_add(_sampler, llama_sampler_init_penalties(256, repeatPenalty, 0.0f, 0.0f));
-    }
-
-    if (topK > 0) {
-        llama_sampler_chain_add(_sampler, llama_sampler_init_top_k(topK));
-    }
-
-    if (topP < 1.0f) {
-        llama_sampler_chain_add(_sampler, llama_sampler_init_top_p(topP, 1));
-    }
-
-    if (minP > 0.0f) {
-        llama_sampler_chain_add(_sampler, llama_sampler_init_min_p(minP, 1));
-    }
-
-    llama_sampler_chain_add(_sampler, llama_sampler_init_temp(temperature));
-    llama_sampler_chain_add(_sampler, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
+    SamplerSettings settings;
+    settings.minP = minP;
+    settings.temperature = temperature;
+    settings.topP = topP;
+    settings.topK = topK;
+    settings.repeatPenalty = repeatPenalty;
+    settings.repeatLastN = 256;
+    _buildSampler(settings);
 
     _formattedMessages = std::vector<char>(llama_n_ctx(_ctx));
     _messages.clear();
@@ -166,6 +152,60 @@ LLMInference::_tokenizeMessages(const std::vector<llama_chat_message> &msgs) {
     return common_tokenize(llama_model_get_vocab(_model), prompt, true, true);
 }
 
+// Cadena de muestreo, en el orden habitual de llama.cpp: penalizaciones, DRY, top-k, top-p, min-p,
+// XTC, temperatura (dinamica si hay rango) y al final el sorteo.
+void
+LLMInference::_buildSampler(const SamplerSettings &st) {
+    llama_sampler_chain_params sampler_params = llama_sampler_chain_default_params();
+    sampler_params.no_perf = true;
+    llama_sampler *chain = llama_sampler_chain_init(sampler_params);
+
+    if (st.repeatPenalty > 1.0f && st.repeatLastN != 0) {
+        llama_sampler_chain_add(chain, llama_sampler_init_penalties(st.repeatLastN, st.repeatPenalty, 0.0f, 0.0f));
+    }
+
+    if (st.dryMultiplier > 0.0f && _model != nullptr) {
+        static const char *breakers[] = {"\n", ":", "\"", "*"};
+        llama_sampler_chain_add(chain, llama_sampler_init_dry(
+                llama_model_get_vocab(_model), llama_model_n_ctx_train(_model),
+                st.dryMultiplier, st.dryBase, st.dryAllowedLength, st.dryPenaltyLastN,
+                breakers, 4));
+    }
+
+    if (st.topK > 0) {
+        llama_sampler_chain_add(chain, llama_sampler_init_top_k(st.topK));
+    }
+    if (st.topP < 1.0f) {
+        llama_sampler_chain_add(chain, llama_sampler_init_top_p(st.topP, 1));
+    }
+    if (st.minP > 0.0f) {
+        llama_sampler_chain_add(chain, llama_sampler_init_min_p(st.minP, 1));
+    }
+    if (st.xtcProbability > 0.0f) {
+        llama_sampler_chain_add(chain, llama_sampler_init_xtc(st.xtcProbability, st.xtcThreshold, 1, LLAMA_DEFAULT_SEED));
+    }
+
+    if (st.dynTempRange > 0.0f) {
+        llama_sampler_chain_add(chain, llama_sampler_init_temp_ext(st.temperature, st.dynTempRange, 1.0f));
+    } else {
+        llama_sampler_chain_add(chain, llama_sampler_init_temp(st.temperature));
+    }
+    llama_sampler_chain_add(chain, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
+
+    if (_sampler) llama_sampler_free(_sampler);
+    _sampler = chain;
+}
+
+void
+LLMInference::setSampler(const SamplerSettings &settings) {
+    if (!_model) return;
+    _buildSampler(settings);
+    LOGi("sampler: temp=%f dyn=%f topK=%d topP=%f minP=%f xtc=%f/%f rep=%f(last %d) dry=%f/%f/%d",
+         settings.temperature, settings.dynTempRange, settings.topK, settings.topP, settings.minP,
+         settings.xtcProbability, settings.xtcThreshold, settings.repeatPenalty,
+         settings.repeatLastN, settings.dryMultiplier, settings.dryBase, settings.dryAllowedLength);
+}
+
 void
 LLMInference::setContextWindow(float high, float low) {
     if (high <= 0.0f || high > 1.0f) high = 0.75f;
@@ -187,6 +227,7 @@ LLMInference::resetChat() {
     _cacheResponseTokens.clear();
     _nCtxUsed = 0;
     if (_ctx) llama_memory_clear(llama_get_memory(_ctx), false);
+    if (_sampler) llama_sampler_reset(_sampler); // olvida las penalizaciones del chat anterior
 }
 
 // Ventana deslizante: si el prompt pasa del umbral alto, borra los mensajes mas viejos

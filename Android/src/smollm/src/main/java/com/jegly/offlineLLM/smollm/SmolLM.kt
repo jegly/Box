@@ -145,6 +145,15 @@ class SmolLM {
         setContextWindow(nativePtr, high, low)
     }
 
+    /**
+     * Cambia los ajustes de muestreo sin recargar el modelo. El arreglo tiene 13 valores
+     * (ver SamplerSettings.toFloatArray en la app); sirve entre turnos.
+     */
+    fun setSampler(values: FloatArray) {
+        verifyHandle()
+        setSampler(nativePtr, values)
+    }
+
     fun getResponseGenerationSpeed(): Float {
         verifyHandle()
         return getResponseGenerationSpeed(nativePtr)
@@ -212,5 +221,6 @@ class SmolLM {
     private external fun stopCompletion(modelPtr: Long)
     private external fun resetChat(modelPtr: Long)
     private external fun setContextWindow(modelPtr: Long, high: Float, low: Float)
+    private external fun setSampler(modelPtr: Long, values: FloatArray)
     private external fun benchModel(modelPtr: Long, pp: Int, tg: Int, pl: Int, nr: Int): String
 }

@@ -4,6 +4,7 @@
 #include "llama.h"
 #include "common.h"
 #include "ggml.h"
+#include "SamplerSettings.h"
 #include <string>
 #include <vector>
 
@@ -20,6 +21,8 @@ public:
     void stopCompletion();
     // Roleplay: borra el historial y el cache de KV sin recargar el modelo.
     void resetChat();
+    // Reconstruye la cadena de muestreo con estos ajustes (se puede llamar entre turnos).
+    void setSampler(const SamplerSettings &settings);
     // Umbrales de la ventana deslizante, como fraccion del contexto (alto > bajo).
     void setContextWindow(float high, float low);
     std::string benchModel(int pp, int tg, int pl, int nr);
@@ -58,6 +61,7 @@ private:
 
     std::vector<llama_token> _tokenizeMessages(const std::vector<llama_chat_message> &msgs);
     void _applyContextWindow();
+    void _buildSampler(const SamplerSettings &settings);
     void _prepareDecode();
 
     static bool _isValidUtf8(const char *response);

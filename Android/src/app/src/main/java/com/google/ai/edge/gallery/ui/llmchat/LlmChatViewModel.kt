@@ -248,6 +248,7 @@ open class LlmChatViewModelBase() : ChatViewModel() {
       if (helper is com.google.ai.edge.gallery.runtime.LlamaCppModelHelper) {
         val history =
           previous.map { (if (it.side == ChatSide.USER) "user" else "assistant") to it.content }
+        helper.refreshSampler(model)
         helper.seedConversation(model, prompt, history)
         return
       }

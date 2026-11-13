@@ -25,6 +25,7 @@ object LlamaCppModelHelper : LlmModelHelper {
 
     // Indexed by model name
     private val engines: MutableMap<String, LlamaCppEngine> = mutableMapOf()
+    private var appContext: Context? = null
 
     override fun initialize(
         context: Context,
@@ -48,6 +49,8 @@ object LlamaCppModelHelper : LlmModelHelper {
 
         val engine = LlamaCppEngine()
         engines[model.name] = engine
+        appContext = context.applicationContext
+        engine.samplerSettings = com.google.ai.edge.gallery.data.characters.SamplerSettingsStore(context).current()
 
         // El tamaño del contexto es el "Max tokens" del modelo (cualquier número). Antes se usaba
         // el máximo del modelo, que en Gemma es enorme y gasta mucha RAM.
@@ -75,6 +78,14 @@ object LlamaCppModelHelper : LlmModelHelper {
                 Log.e(TAG, "Failed to load GGUF model", e)
                 onDone(e.message ?: "Failed to load GGUF model")
             }
+        )
+    }
+
+    /** Roleplay: vuelve a leer el modo de muestreo guardado y lo aplica al modelo cargado. */
+    fun refreshSampler(model: Model) {
+        val ctx = appContext ?: return
+        engines[model.name]?.applySampler(
+            com.google.ai.edge.gallery.data.characters.SamplerSettingsStore(ctx).current()
         )
     }
 

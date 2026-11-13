@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -88,6 +89,7 @@ fun RoleplayScreen(
     var toDelete by remember { mutableStateOf<RoleplayCharacter?>(null) }
     val personas by viewModel.personas.collectAsState()
     var showPersonas by remember { mutableStateOf(false) }
+    var showSampler by remember { mutableStateOf(false) }
 
     LaunchedEffect(message) {
         message?.let {
@@ -110,6 +112,9 @@ fun RoleplayScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showSampler = true }) {
+                        Icon(Icons.Rounded.Tune, contentDescription = "Muestreo")
+                    }
                     IconButton(onClick = {
                         // Las tarjetas suelen ser .json o .png; algunos gestores no reconocen
                         // el tipo, así que se aceptan todos.
@@ -170,6 +175,10 @@ fun RoleplayScreen(
             }
         }
         }
+    }
+
+    if (showSampler) {
+        SamplerDialog(onDismiss = { showSampler = false })
     }
 
     if (showPersonas) {

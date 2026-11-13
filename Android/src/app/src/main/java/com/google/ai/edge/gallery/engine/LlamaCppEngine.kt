@@ -29,6 +29,9 @@ class LlamaCppEngine {
     }
 
     private var instance = SmolLM()
+
+    /** Ajustes de muestreo de Roleplay; se aplican al cargar el modelo y al cambiarlos. */
+    @Volatile var samplerSettings: com.google.ai.edge.gallery.data.characters.SamplerSettings? = null
     private val stateLock = ReentrantLock()
 
     // Track load params for resetConversation
@@ -78,6 +81,7 @@ class LlamaCppEngine {
                 try {
                     instance.load(modelPath, params)
                     instance.setContextWindow(CONTEXT_WINDOW_HIGH, CONTEXT_WINDOW_LOW)
+                    samplerSettings?.let { instance.setSampler(it.toFloatArray()) }
 
                     if (systemPrompt.isNotBlank()) {
                         instance.addSystemPrompt(systemPrompt)
@@ -138,6 +142,7 @@ class LlamaCppEngine {
                     instance = SmolLM()
                     instance.load(modelPath, params)
                     instance.setContextWindow(CONTEXT_WINDOW_HIGH, CONTEXT_WINDOW_LOW)
+                    samplerSettings?.let { instance.setSampler(it.toFloatArray()) }
 
                     if (systemPrompt.isNotBlank()) {
                         instance.addSystemPrompt(systemPrompt)
@@ -163,6 +168,15 @@ class LlamaCppEngine {
      *
      * Roles: "user" y "assistant". No hace nada si el modelo está ocupado.
      */
+    /** Cambia el muestreo entre turnos (no hace nada si el modelo está ocupado). */
+    fun applySampler(settings: com.google.ai.edge.gallery.data.characters.SamplerSettings) {
+        samplerSettings = settings
+        stateLock.withLock {
+            if (!isModelLoaded.get() || isGenerating) return
+            instance.setSampler(settings.toFloatArray())
+        }
+    }
+
     fun seedConversation(systemPrompt: String, history: List<Pair<String, String>>) {
         stateLock.withLock {
             if (!isModelLoaded.get() || isGenerating) return

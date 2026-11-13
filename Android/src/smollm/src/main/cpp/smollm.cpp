@@ -110,3 +110,15 @@ Java_com_jegly_offlineLLM_smollm_SmolLM_setContextWindow(JNIEnv* env, jobject th
     auto* llmInference = reinterpret_cast<LLMInference*>(modelPtr);
     llmInference->setContextWindow(high, low);
 }
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_jegly_offlineLLM_smollm_SmolLM_setSampler(JNIEnv* env, jobject thiz, jlong modelPtr, jfloatArray values) {
+    auto* llmInference = reinterpret_cast<LLMInference*>(modelPtr);
+    const jsize n = env->GetArrayLength(values);
+    jfloat* data = env->GetFloatArrayElements(values, nullptr);
+    SamplerSettings settings;
+    if (settings.fromArray(data, (int) n)) {
+        llmInference->setSampler(settings);
+    }
+    env->ReleaseFloatArrayElements(values, data, JNI_ABORT);
+}
