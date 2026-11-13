@@ -8,7 +8,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
 
 /** Una entrada del lorebook de la tarjeta (character_book de chara_card v2/v3). */
 data class LoreEntry(
@@ -23,6 +26,8 @@ data class LoreEntry(
     val caseSensitive: Boolean = false,
     val insertionOrder: Int = 0,
     val priority: Int = 0,
+    /** Título de la entrada (campo `comment` o `name` de las tarjetas); solo para mostrar. */
+    val comment: String = "",
 )
 
 /**
@@ -66,7 +71,46 @@ object LorebookMatcher {
             caseSensitive = bool("case_sensitive", false),
             insertionOrder = int("insertion_order"),
             priority = int("priority"),
+            comment = ((this["comment"] ?: this["name"]) as? JsonPrimitive)?.contentOrNull?.trim().orEmpty(),
         )
+    }
+
+    /** "reina, castillo , rey" -> [reina, castillo, rey] */
+    fun parseKeys(text: String): List<String> =
+        text.split(",", "\n").map { it.trim() }.filter { it.isNotEmpty() }
+
+    fun formatKeys(keys: List<String>): String = keys.joinToString(", ")
+
+    /**
+     * Escribe las entradas como `character_book` (formato chara_card v2, compatible con
+     * SillyTavern). Conserva los demás campos del libro original (nombre, descripción, etc.); los
+     * campos extra de cada entrada que esta app no edita no se conservan.
+     */
+    fun encode(entries: List<LoreEntry>, originalJson: String = ""): String {
+        val original: JsonObject? =
+            runCatching { json.parseToJsonElement(originalJson).jsonObject }.getOrNull()
+        val root = buildJsonObject {
+            original?.forEach { (k, v) -> if (k != "entries") put(k, v) }
+            put("entries", buildJsonArray {
+                entries.forEachIndexed { i, e ->
+                    add(buildJsonObject {
+                        put("id", i)
+                        put("keys", buildJsonArray { e.keys.forEach { add(JsonPrimitive(it)) } })
+                        put("secondary_keys", buildJsonArray { e.secondaryKeys.forEach { add(JsonPrimitive(it)) } })
+                        put("content", e.content)
+                        put("comment", e.comment)
+                        put("enabled", e.enabled)
+                        put("constant", e.constant)
+                        put("selective", e.selective)
+                        put("case_sensitive", e.caseSensitive)
+                        put("insertion_order", e.insertionOrder)
+                        put("priority", e.priority)
+                        put("position", "before_char")
+                    })
+                }
+            })
+        }
+        return root.toString()
     }
 
     private fun contains(text: String, key: String, caseSensitive: Boolean) =

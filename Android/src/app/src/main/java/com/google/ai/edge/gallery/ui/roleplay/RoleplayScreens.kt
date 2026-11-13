@@ -342,6 +342,10 @@ fun CharacterEditorScreen(
     var nameError by remember { mutableStateOf(false) }
     var tab by remember { mutableIntStateOf(0) }
     var modelName by remember { mutableStateOf("") }
+    // Lorebook: entradas editables. Solo se reescribe el character_book si se tocó algo.
+    val lore = remember { mutableStateListOf<com.google.ai.edge.gallery.data.characters.LoreEntry>() }
+    val loreKeyText = remember { mutableStateListOf<String>() }
+    var loreDirty by remember { mutableStateOf(false) }
 
     LaunchedEffect(characterId) {
         if (characterId != "new") {
@@ -362,6 +366,12 @@ fun CharacterEditorScreen(
                 creatorNotes = c.creatorNotes
                 creator = c.creator
                 modelName = c.modelName
+                lore.clear()
+                loreKeyText.clear()
+                com.google.ai.edge.gallery.data.characters.LorebookMatcher.parse(c.characterBookJson).forEach {
+                    lore.add(it)
+                    loreKeyText.add(com.google.ai.edge.gallery.data.characters.LorebookMatcher.formatKeys(it.keys))
+                }
             }
             loaded = true
         }
@@ -383,6 +393,9 @@ fun CharacterEditorScreen(
             postHistoryInstructions = postHistory,
             creatorNotes = creatorNotes,
             creator = creator,
+            characterBookJson =
+                if (loreDirty) com.google.ai.edge.gallery.data.characters.LorebookMatcher.encode(lore.toList(), base.characterBookJson)
+                else base.characterBookJson,
         )
     }
 
@@ -401,7 +414,7 @@ fun CharacterEditorScreen(
         if (!loaded) return@Scaffold
         Column(Modifier.fillMaxSize().padding(padding)) {
             TabRow(selectedTabIndex = tab) {
-                listOf("Core Info", "Appearance", "Avanzado").forEachIndexed { i, t ->
+                listOf("Core Info", "Appearance", "Lorebook", "Avanzado").forEachIndexed { i, t ->
                     Tab(selected = tab == i, onClick = { tab = i }, text = { Text(t) })
                 }
             }
@@ -455,6 +468,67 @@ fun CharacterEditorScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                    }
+                    2 -> {
+                        Text(
+                            "Información del mundo que se añade al prompt solo cuando la charla menciona sus palabras clave. \"Siempre activa\" la añade en todos los turnos.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        lore.forEachIndexed { i, e ->
+                            androidx.compose.material3.Card(Modifier.fillMaxWidth()) {
+                                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        OutlinedTextField(
+                                            value = e.comment,
+                                            onValueChange = { lore[i] = e.copy(comment = it); loreDirty = true },
+                                            label = { Text("Título (opcional)") },
+                                            singleLine = true, modifier = Modifier.weight(1f),
+                                        )
+                                        IconButton(onClick = {
+                                            lore.removeAt(i); loreKeyText.removeAt(i); loreDirty = true
+                                        }) {
+                                            Icon(Icons.Rounded.Delete, contentDescription = "Quitar entrada")
+                                        }
+                                    }
+                                    OutlinedTextField(
+                                        value = loreKeyText.getOrElse(i) { "" },
+                                        onValueChange = {
+                                            if (i < loreKeyText.size) loreKeyText[i] = it
+                                            lore[i] = e.copy(keys = com.google.ai.edge.gallery.data.characters.LorebookMatcher.parseKeys(it))
+                                            loreDirty = true
+                                        },
+                                        label = { Text("Palabras clave (separadas por coma)") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                    BigField("Contenido", e.content, { lore[i] = e.copy(content = it); loreDirty = true }, 3)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        androidx.compose.material3.Switch(
+                                            checked = e.enabled,
+                                            onCheckedChange = { lore[i] = e.copy(enabled = it); loreDirty = true },
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Activa", style = MaterialTheme.typography.bodyMedium)
+                                        Spacer(Modifier.width(16.dp))
+                                        androidx.compose.material3.Switch(
+                                            checked = e.constant,
+                                            onCheckedChange = { lore[i] = e.copy(constant = it); loreDirty = true },
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Siempre activa", style = MaterialTheme.typography.bodyMedium)
+                                    }
+                                }
+                            }
+                        }
+                        OutlinedButton(onClick = {
+                            lore.add(com.google.ai.edge.gallery.data.characters.LoreEntry(keys = emptyList(), content = "", insertionOrder = lore.size))
+                            loreKeyText.add("")
+                            loreDirty = true
+                        }) {
+                            Icon(Icons.Rounded.Add, contentDescription = null)
+                            Spacer(Modifier.width(4.dp))
+                            Text("Añadir entrada")
+                        }
                     }
                     else -> {
                         Text("Modelo de este personaje", style = MaterialTheme.typography.titleSmall)
