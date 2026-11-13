@@ -156,7 +156,12 @@ fun ChatView(
       if (conv?.systemPrompt?.isNotEmpty() == true) {
         llmViewModel.setCurrentSystemPrompt(conv.systemPrompt)
       }
-      llmViewModel.setRoleplayChat(conv?.characterId?.isNotBlank() == true)
+      llmViewModel.setRoleplayChat(
+        value = conv?.characterId?.isNotBlank() == true,
+        characterId = conv?.characterId ?: "",
+        loreMaxEntries =
+          com.google.ai.edge.gallery.data.characters.RoleplaySettingsStore(context).loreMaxEntries(),
+      )
     } else {
       llmViewModel.setRoleplayChat(false)
       Log.d(TAG, "No existing conversation for model ${selectedModel.name}, starting fresh")

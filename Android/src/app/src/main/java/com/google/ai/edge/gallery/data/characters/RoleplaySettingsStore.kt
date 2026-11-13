@@ -27,7 +27,15 @@ class RoleplaySettingsStore(context: Context) {
     prefs.edit().putInt(KEY_MEMORY_MAX, n.coerceIn(0, 20)).apply()
   }
 
+  /** Cuántas entradas del lorebook (como máximo) se añaden al prompt por mensaje. */
+  fun loreMaxEntries(): Int = prefs.getInt(KEY_LORE_MAX, 3).coerceIn(0, 20)
+
+  fun setLoreMaxEntries(n: Int) {
+    prefs.edit().putInt(KEY_LORE_MAX, n.coerceIn(0, 20)).apply()
+  }
+
   private companion object {
+    const val KEY_LORE_MAX = "lore_max_entries"
     const val KEY_MEMORY_MAX = "memory_max_injections"
     const val KEY_MODEL = "default_model"
   }

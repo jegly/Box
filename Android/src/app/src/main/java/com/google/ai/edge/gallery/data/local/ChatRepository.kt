@@ -1,6 +1,7 @@
 package com.google.ai.edge.gallery.data.local
 
 import com.google.ai.edge.gallery.data.characters.Swipes
+import com.google.ai.edge.gallery.data.local.dao.CharacterDao
 import com.google.ai.edge.gallery.data.local.dao.ConversationDao
 import com.google.ai.edge.gallery.data.local.dao.MessageDao
 import com.google.ai.edge.gallery.data.local.entities.Conversation
@@ -17,7 +18,12 @@ import javax.inject.Singleton
 class ChatRepository @Inject constructor(
     private val conversationDao: ConversationDao,
     private val messageDao: MessageDao,
+    private val characterDao: CharacterDao,
 ) {
+    /** Roleplay: JSON del lorebook (character_book) del personaje, o "" si no tiene. */
+    suspend fun getCharacterBookJson(characterId: String): String =
+        characterDao.getById(characterId)?.characterBookJson ?: ""
+
     // --- Conversations ---
 
     fun getAllConversations(): Flow<List<Conversation>> = conversationDao.getAllConversations()

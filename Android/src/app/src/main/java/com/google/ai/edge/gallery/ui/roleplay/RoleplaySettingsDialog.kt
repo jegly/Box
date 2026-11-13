@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,6 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import com.google.ai.edge.gallery.data.characters.RoleplaySettingsStore
 
 /**
  * Configuración de Roleplay: modelo predeterminado para los chats de personaje y acceso a los
@@ -34,6 +39,8 @@ fun RoleplaySettingsDialog(
     onOpenSampler: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val store = remember { RoleplaySettingsStore(LocalContext.current) }
+    var loreMax by remember { mutableStateOf(store.loreMaxEntries().toString()) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Configuración de Roleplay") },
@@ -55,6 +62,17 @@ fun RoleplaySettingsDialog(
                         Text(name, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
+                OutlinedTextField(
+                    value = loreMax,
+                    onValueChange = { t ->
+                        loreMax = t
+                        t.toIntOrNull()?.let { store.setLoreMaxEntries(it) }
+                    },
+                    label = { Text("Máx. de entradas de lorebook por mensaje (0-20)") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 TextButton(onClick = onOpenSampler) { Text("Ajustes de muestreo (presets)") }
             }
         },

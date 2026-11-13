@@ -194,8 +194,26 @@ open class LlmChatViewModelBase() : ChatViewModel() {
   // true si el chat abierto es de un personaje de Roleplay.
   private var isRoleplayChat = false
 
-  fun setRoleplayChat(value: Boolean) {
+  // Lorebook del personaje (entradas activadas por palabras clave) y cuántas se permiten por mensaje.
+  @Volatile private var loreEntries: List<com.google.ai.edge.gallery.data.characters.LoreEntry> = emptyList()
+  private var loreMaxEntries = 3
+
+  fun setRoleplayChat(value: Boolean, characterId: String = "", loreMaxEntries: Int = 3) {
     isRoleplayChat = value
+    this.loreMaxEntries = loreMaxEntries
+    loreEntries = emptyList()
+    if (value && characterId.isNotBlank()) {
+      viewModelScope.launch(Dispatchers.IO) {
+        try {
+          loreEntries =
+            com.google.ai.edge.gallery.data.characters.LorebookMatcher.parse(
+              chatRepository.getCharacterBookJson(characterId)
+            )
+        } catch (e: Exception) {
+          Log.e(TAG, "Failed to load lorebook", e)
+        }
+      }
+    }
   }
 
   private val _currentSystemPrompt = MutableStateFlow("")
@@ -246,9 +264,20 @@ open class LlmChatViewModelBase() : ChatViewModel() {
 
   private fun applySystemPromptIfNeeded(model: Model, input: String) {
     val helper = model.runtimeHelper
-    val prompt = _currentSystemPrompt.value
+    val basePrompt = _currentSystemPrompt.value
     try {
       val previous = previousTexts(model)
+      // Lorebook: las entradas cuyas palabras clave aparecen en las últimas charlas o en el
+      // mensaje nuevo se añaden al prompt de este turno (solo en chats de personaje).
+      val prompt =
+        if (isRoleplayChat && loreEntries.isNotEmpty()) {
+          com.google.ai.edge.gallery.data.characters.LorebookMatcher.applyToPrompt(
+            prompt = basePrompt,
+            entries = loreEntries,
+            scanTexts = previous.takeLast(3).map { it.content } + input,
+            maxEntries = loreMaxEntries,
+          )
+        } else basePrompt
 
       // GGUF (llama.cpp): el historial nativo se deja igual al de la pantalla; la ventana
       // deslizante y la caché de prefijo trabajan dentro del motor nativo.
