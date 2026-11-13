@@ -157,43 +157,35 @@ fun RoleplayScreen(
                 }
             }
         } else {
-            LazyColumn(
+            CharacterLibrary(
+                characters = characters,
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-            ) {
-                items(characters, key = { it.id }) { c ->
-                    CharacterRow(
-                        character = c,
-                        onChat = {
-                            // Prioridad: modelo del personaje, luego el predeterminado de Roleplay.
-                            val chatModel = com.google.ai.edge.gallery.data.characters.RoleplayModelResolver.resolve(
-                                characterModel = c.modelName,
-                                defaultModel = defaultModel,
-                                available = availableModels,
-                            )
-                            if (chatModel != null) {
-                                viewModel.startChat(c, chatModel) { convId -> onOpenChat(chatModel, convId) }
-                            } else {
-                                // Todavía no hay modelo elegido: se abre la configuración para elegir uno.
-                                showSettings = true
-                            }
-                        },
-                        onEdit = { onEditCharacter(c.id) },
-                        onShare = {
-                            val send = Intent(Intent.ACTION_SEND).apply {
-                                type = "application/json"
-                                putExtra(Intent.EXTRA_SUBJECT, "${c.name}.json")
-                                putExtra(Intent.EXTRA_TEXT, viewModel.exportJson(c))
-                            }
-                            context.startActivity(Intent.createChooser(send, "Compartir personaje"))
-                        },
-                        onDelete = { toDelete = c },
-                        onMemories = { memoryFor = c },
-                        modelAvailable = true,
+                onChat = { c ->
+                    // Prioridad: modelo del personaje, luego el predeterminado de Roleplay.
+                    val chatModel = com.google.ai.edge.gallery.data.characters.RoleplayModelResolver.resolve(
+                        characterModel = c.modelName,
+                        defaultModel = defaultModel,
+                        available = availableModels,
                     )
-                }
-            }
+                    if (chatModel != null) {
+                        viewModel.startChat(c, chatModel) { convId -> onOpenChat(chatModel, convId) }
+                    } else {
+                        // Todavía no hay modelo elegido: se abre la configuración para elegir uno.
+                        showSettings = true
+                    }
+                },
+                onEdit = { c -> onEditCharacter(c.id) },
+                onShare = { c ->
+                    val send = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/json"
+                        putExtra(Intent.EXTRA_SUBJECT, "${c.name}.json")
+                        putExtra(Intent.EXTRA_TEXT, viewModel.exportJson(c))
+                    }
+                    context.startActivity(Intent.createChooser(send, "Compartir personaje"))
+                },
+                onDelete = { c -> toDelete = c },
+                onMemories = { c -> memoryFor = c },
+            )
         }
         }
     }
