@@ -186,7 +186,9 @@ fun GalleryNavHost(
 
   NavHost(
     navController = navController,
-    startDestination = ROUTE_HOMESCREEN,
+    // La app es de Roleplay: abre en la biblioteca de personajes. El menú clásico (chat libre,
+    // modelos, historial) queda a un toque, desde el botón de menú de Roleplay.
+    startDestination = ROUTE_ROLEPLAY,
     enterTransition = { EnterTransition.None },
     exitTransition = { ExitTransition.None },
   ) {
@@ -208,7 +210,11 @@ fun GalleryNavHost(
           },
           onModelsClicked = { navController.navigate(ROUTE_MODEL_MANAGER) },
           navigateToChatHistory = { navController.navigate(ROUTE_CHAT_HISTORY) },
-          onRoleplayClicked = { navController.navigate(ROUTE_ROLEPLAY) },
+          onRoleplayClicked = {
+            if (!navController.popBackStack(ROUTE_ROLEPLAY, inclusive = false)) {
+              navController.navigate(ROUTE_ROLEPLAY)
+            }
+          },
           onNewChatClicked = {
             val llmChatTask = modelManagerViewModel.getTaskById(BuiltInTaskId.LLM_CHAT)
             val firstModel = llmChatTask?.models?.firstOrNull()
@@ -423,6 +429,7 @@ fun GalleryNavHost(
           ?.map { it.name } ?: emptyList()
       com.google.ai.edge.gallery.ui.roleplay.RoleplayScreen(
         navigateUp = { navController.navigateUp() },
+        onMenuClicked = { navController.navigate(ROUTE_HOMESCREEN) },
         availableModels = downloadedModels,
         onOpenChat = { modelName, conversationId ->
           lastNavigatedModelName = ""

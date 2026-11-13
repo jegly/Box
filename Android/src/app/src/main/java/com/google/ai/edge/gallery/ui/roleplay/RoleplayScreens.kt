@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Psychology
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Share
@@ -77,6 +78,8 @@ import java.io.File
 @Composable
 fun RoleplayScreen(
     navigateUp: () -> Unit,
+    /** Si no es null, la barra muestra un botón de menú (la app abre en Roleplay) en vez de volver. */
+    onMenuClicked: (() -> Unit)? = null,
     /** Nombres de los modelos descargados que se pueden usar para chatear. */
     availableModels: List<String>,
     onOpenChat: (modelName: String, conversationId: String) -> Unit,
@@ -118,8 +121,14 @@ fun RoleplayScreen(
             TopAppBar(
                 title = { Text("Roleplay") },
                 navigationIcon = {
-                    IconButton(onClick = navigateUp) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Volver")
+                    if (onMenuClicked != null) {
+                        IconButton(onClick = onMenuClicked) {
+                            Icon(Icons.Rounded.Menu, contentDescription = "Menú")
+                        }
+                    } else {
+                        IconButton(onClick = navigateUp) {
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Volver")
+                        }
                     }
                 },
                 actions = {
