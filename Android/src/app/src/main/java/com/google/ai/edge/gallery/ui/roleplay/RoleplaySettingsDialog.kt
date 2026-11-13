@@ -39,7 +39,8 @@ fun RoleplaySettingsDialog(
     onOpenSampler: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val store = remember { RoleplaySettingsStore(LocalContext.current) }
+    val context = LocalContext.current
+    val store = remember { RoleplaySettingsStore(context) }
     var loreMax by remember { mutableStateOf(store.loreMaxEntries().toString()) }
     AlertDialog(
         onDismissRequest = onDismiss,
