@@ -325,30 +325,23 @@ fun ChatViewWrapper(
 private fun ContextWindowIndicator(model: Model, viewModel: LlmChatViewModelBase) {
   val uiState by viewModel.uiState.collectAsState()
   val messages = uiState.messagesByModel[model.name] ?: return
+  if (messages.none { it.type == ChatMessageType.TEXT }) return
 
-  val totalChars = messages
-    .filter { it.type == ChatMessageType.TEXT }
-    .sumOf { (it as? ChatMessageText)?.content?.length ?: 0 }
+  // Se recalcula cuando cambian los mensajes. Cuenta solo lo que el motor ve ahora: los mensajes
+  // que ya salieron de la ventana deslizante no suman, y llenarse no es un error (se desliza).
+  val usage = viewModel.contextUsage(model)
+  if (usage.usedTokens == 0) return
 
-  val maxTokens = model.configValues[ConfigKeys.MAX_TOKENS.label]
-    ?.toString()?.toIntOrNull()?.takeIf { it > 0 }
-    ?: model.llmMaxToken.takeIf { it > 0 }
-    ?: 1024
-  val estimatedTokens = (totalChars / 4).coerceAtMost(maxTokens)
-  val fraction = (estimatedTokens.toFloat() / maxTokens).coerceIn(0f, 1f)
-  if (estimatedTokens == 0) return
-
-  val color = when {
-    fraction > 0.85f -> MaterialTheme.colorScheme.error
-    fraction > 0.65f -> MaterialTheme.colorScheme.tertiary
-    else -> MaterialTheme.colorScheme.primary
-  }
+  val color =
+    if (usage.fraction > 0.9f) MaterialTheme.colorScheme.tertiary
+    else MaterialTheme.colorScheme.primary
+  val muted = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
 
   Column(
     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp),
   ) {
     LinearProgressIndicator(
-      progress = { fraction },
+      progress = { usage.fraction },
       modifier = Modifier.fillMaxWidth(),
       color = color,
       trackColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -358,14 +351,15 @@ private fun ContextWindowIndicator(model: Model, viewModel: LlmChatViewModelBase
       horizontalArrangement = Arrangement.SpaceBetween,
     ) {
       Text(
-        "Context",
+        if (usage.windowActive) "Contexto ${usage.percent}% · memoria deslizante activa"
+        else "Contexto ${usage.percent}%",
         style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        color = muted,
       )
       Text(
-        "~$estimatedTokens / $maxTokens tokens",
+        "~${usage.usedTokens} / ${usage.maxTokens}",
         style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        color = muted,
       )
     }
   }

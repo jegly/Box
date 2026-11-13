@@ -253,6 +253,24 @@ open class LlmChatViewModelBase() : ChatViewModel() {
 
   private val liteRtWindows = mutableMapOf<String, LiteRtWindowState>()
 
+  /** Uso real del contexto (lo que el motor ve ahora), para el indicador de la pantalla. */
+  fun contextUsage(model: Model): com.google.ai.edge.gallery.data.characters.ContextUsage {
+    val texts =
+      (uiState.value.messagesByModel[model.name] ?: emptyList())
+        .filter { it.type == ChatMessageType.TEXT && it.side != ChatSide.SYSTEM }
+        .filterIsInstance<ChatMessageText>()
+    val keep = if (texts.firstOrNull()?.side == ChatSide.AGENT) 1 else 0
+    val maxTokens =
+      model.getIntConfigValue(key = ConfigKeys.MAX_TOKENS, defaultValue = DEFAULT_MAX_TOKEN)
+    return com.google.ai.edge.gallery.data.characters.ContextUsage.compute(
+      promptText = _currentSystemPrompt.value,
+      texts = texts.map { it.content },
+      keep = keep,
+      dropped = liteRtWindows[model.name]?.dropped ?: 0,
+      maxTokens = maxTokens,
+    )
+  }
+
   /** Mensajes de texto anteriores al que se envía ahora (sin el último mensaje del usuario). */
   private fun previousTexts(model: Model): List<ChatMessageText> {
     val texts =

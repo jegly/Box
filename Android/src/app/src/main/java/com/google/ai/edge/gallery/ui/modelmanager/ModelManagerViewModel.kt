@@ -413,6 +413,16 @@ constructor(
         return@launch
       }
 
+      // Libera cualquier OTRO modelo de la tarea que siga cargado: dos motores grandes a la vez
+      // (el viejo cerrándose mientras el nuevo reserva su caché, p. ej. al subir el contexto de
+      // 2048 a 8192) pueden agotar memoria o chocar dentro del código nativo.
+      for (other in task.models) {
+        if (other.name != model.name && other.instance != null) {
+          Log.d(TAG, "Releasing '${other.name}' before initializing '${model.name}'")
+          cleanupModel(context = context, task = task, model = other)
+        }
+      }
+
       // Clean up.
       cleanupModel(context = context, task = task, model = model)
 
