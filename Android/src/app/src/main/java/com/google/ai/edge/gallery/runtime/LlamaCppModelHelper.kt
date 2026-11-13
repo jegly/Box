@@ -178,16 +178,29 @@ object LlamaCppModelHelper : LlmModelHelper {
             Log.w(TAG, "Image input not supported with llama.cpp engine, ignoring ${images.size} images")
         }
 
+        // Gemma 4: separa el razonamiento en voz alta de la respuesta (ver ThinkingSplitter).
+        val splitter =
+            if (com.google.ai.edge.gallery.data.characters.ThinkingSplitter.appliesTo(model.name))
+                com.google.ai.edge.gallery.data.characters.ThinkingSplitter()
+            else null
+        fun emit(out: com.google.ai.edge.gallery.data.characters.ThinkingSplitter.Out) {
+            out.thought?.let { resultListener("", false, it) }
+            if (out.answer.isNotEmpty()) resultListener(out.answer, false, null)
+        }
+
         engine.generateResponse(
             query = input,
             onToken = { partialResponse ->
-                resultListener(partialResponse, false, null)
+                if (splitter == null) resultListener(partialResponse, false, null)
+                else emit(splitter.feed(partialResponse))
             },
             onComplete = { result ->
+                splitter?.let { emit(it.finish()) }
                 // Send the final delta (empty string) with done=true
                 resultListener("", true, null)
             },
             onCancelled = {
+                splitter?.let { emit(it.finish()) }
                 resultListener("", true, null)
             },
             onError = { e ->

@@ -103,12 +103,12 @@ object LlmChatModelHelper : LlmModelHelper {
     Log.d(TAG, "Preferred backend: $preferredBackend")
 
     val modelPath = model.getPath(context = context)
-    val engineConfig =
+    fun configFor(withImage: Boolean, withAudio: Boolean) =
       EngineConfig(
         modelPath = modelPath,
         backend = preferredBackend,
-        visionBackend = if (shouldEnableImage) visionBackend else null, // must be GPU for Gemma 3n
-        audioBackend = if (shouldEnableAudio) Backend.CPU() else null, // must be CPU for Gemma 3n
+        visionBackend = if (withImage) visionBackend else null, // must be GPU for Gemma 3n
+        audioBackend = if (withAudio) Backend.CPU() else null, // must be CPU for Gemma 3n
         maxNumTokens = maxTokens,
         cacheDir =
           if (modelPath.startsWith("/data/local/tmp"))
@@ -118,8 +118,34 @@ object LlmChatModelHelper : LlmModelHelper {
 
     // Create an instance of LiteRT LM engine and conversation.
     try {
-      val engine = Engine(engineConfig)
-      engine.initialize()
+      // Si el motor no puede cargar la visión o el audio del modelo (p. ej. "The Vision Encoder
+      // model must have exactly one signature but got 3"), se reintenta solo con texto: para
+      // roleplay es mejor un modelo que carga sin imágenes que un modelo que no carga.
+      var created: Engine? = null
+      var firstError: Exception? = null
+      val attempts = buildList {
+        add(shouldEnableImage to shouldEnableAudio)
+        if (shouldEnableImage || shouldEnableAudio) add(false to false)
+      }
+      for ((withImage, withAudio) in attempts) {
+        var candidate: Engine? = null
+        try {
+          candidate = Engine(configFor(withImage, withAudio))
+          candidate.initialize()
+          created = candidate
+          if (!withImage && shouldEnableImage || !withAudio && shouldEnableAudio) {
+            Log.w(TAG, "Engine loaded WITHOUT image/audio after: ${firstError?.message}")
+          }
+          break
+        } catch (e: Exception) {
+          Log.w(TAG, "Engine init failed (image=$withImage, audio=$withAudio): ${e.message}")
+          if (firstError == null) firstError = e
+          try {
+            candidate?.close()
+          } catch (ignored: Exception) {}
+        }
+      }
+      val engine: Engine = created ?: throw (firstError ?: IllegalStateException("Failed to create engine"))
 
       ExperimentalFlags.enableConversationConstrainedDecoding =
         enableConversationConstrainedDecoding
