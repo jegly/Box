@@ -13,7 +13,22 @@ class RoleplaySettingsStore(context: Context) {
     prefs.edit().putString(KEY_MODEL, name ?: "").apply()
   }
 
+  /** Si el personaje usa su memoria a largo plazo al abrir un chat nuevo (por defecto sí). */
+  fun memoryEnabled(characterId: String): Boolean = prefs.getBoolean("memory_$characterId", true)
+
+  fun setMemoryEnabled(characterId: String, enabled: Boolean) {
+    prefs.edit().putBoolean("memory_$characterId", enabled).apply()
+  }
+
+  /** Cuántos recuerdos (los más recientes) se inyectan en el prompt. */
+  fun memoryMaxInjections(): Int = prefs.getInt(KEY_MEMORY_MAX, 3).coerceIn(0, 20)
+
+  fun setMemoryMaxInjections(n: Int) {
+    prefs.edit().putInt(KEY_MEMORY_MAX, n.coerceIn(0, 20)).apply()
+  }
+
   private companion object {
+    const val KEY_MEMORY_MAX = "memory_max_injections"
     const val KEY_MODEL = "default_model"
   }
 }

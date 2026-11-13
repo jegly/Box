@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 class RoleplayViewModel @Inject constructor(
     private val repository: CharacterRepository,
     private val personaRepository: PersonaRepository,
+    private val memoryRepository: com.google.ai.edge.gallery.data.characters.MemoryRepository,
 ) : ViewModel() {
 
     val characters: StateFlow<List<RoleplayCharacter>> = repository
@@ -35,6 +36,21 @@ class RoleplayViewModel @Inject constructor(
     private val _message = MutableStateFlow<String?>(null)
     /** Mensaje corto para mostrar al usuario (error o confirmación). */
     val message: StateFlow<String?> = _message.asStateFlow()
+
+    // --- Memoria a largo plazo ---
+    fun memories(characterId: String) = memoryRepository.observe(characterId)
+
+    fun saveMemory(memory: com.google.ai.edge.gallery.data.local.entities.CharacterMemory) {
+        viewModelScope.launch { memoryRepository.save(memory) }
+    }
+
+    fun deleteMemory(memory: com.google.ai.edge.gallery.data.local.entities.CharacterMemory) {
+        viewModelScope.launch { memoryRepository.delete(memory) }
+    }
+
+    fun clearMemories(characterId: String) {
+        viewModelScope.launch { memoryRepository.deleteAll(characterId) }
+    }
 
     fun clearMessage() {
         _message.value = null

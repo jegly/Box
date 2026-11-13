@@ -10,6 +10,8 @@ import com.google.ai.edge.gallery.data.local.dao.CharacterDao
 import com.google.ai.edge.gallery.data.local.dao.ConversationDao
 import com.google.ai.edge.gallery.data.local.dao.MessageDao
 import com.google.ai.edge.gallery.data.local.dao.PersonaDao
+import com.google.ai.edge.gallery.data.local.dao.MemoryDao
+import com.google.ai.edge.gallery.data.local.entities.CharacterMemory
 import com.google.ai.edge.gallery.data.local.entities.Conversation
 import com.google.ai.edge.gallery.data.local.entities.Message
 import com.google.ai.edge.gallery.data.local.entities.RoleplayCharacter
@@ -22,8 +24,8 @@ import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
  * Uses SQLCipher for at-rest encryption with a key derived from device Keystore.
  */
 @Database(
-    entities = [Conversation::class, Message::class, RoleplayCharacter::class, UserPersona::class],
-    version = 5,
+    entities = [Conversation::class, Message::class, RoleplayCharacter::class, UserPersona::class, CharacterMemory::class],
+    version = 6,
     exportSchema = false
 )
 abstract class BoxChatDatabase : RoomDatabase() {
@@ -31,6 +33,7 @@ abstract class BoxChatDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
     abstract fun characterDao(): CharacterDao
     abstract fun personaDao(): PersonaDao
+    abstract fun memoryDao(): MemoryDao
 
     companion object {
         private const val DB_NAME = "box_chat.db"
@@ -99,6 +102,18 @@ abstract class BoxChatDatabase : RoomDatabase() {
             }
         }
 
+        // Roleplay: recuerdos a largo plazo por personaje.
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS character_memories (" +
+                        "id TEXT NOT NULL, characterId TEXT NOT NULL, content TEXT NOT NULL, " +
+                        "createdAt INTEGER NOT NULL, PRIMARY KEY(id))"
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_character_memories_characterId ON character_memories(characterId)")
+            }
+        }
+
         @Volatile
         private var INSTANCE: BoxChatDatabase? = null
 
@@ -121,7 +136,7 @@ abstract class BoxChatDatabase : RoomDatabase() {
                 DB_NAME
             )
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .fallbackToDestructiveMigration()
                 .build()
         }

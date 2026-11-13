@@ -46,6 +46,8 @@ object CharacterPromptBuilder {
         defaultInstruction: String = DEFAULT_INSTRUCTION,
         userDescription: String = "",
         impression: String = "",
+        // Bloque ya armado por MemoryPromptBuilder ("" = sin recuerdos).
+        memory: String = "",
     ): BuiltPrompt {
         val charName = card.name.trim().ifEmpty { "Character" }
         val user = userName.trim().ifEmpty { DEFAULT_USER_NAME }
@@ -68,6 +70,7 @@ object CharacterPromptBuilder {
         resolve(card.scenario).takeIf { it.isNotEmpty() }?.let { parts += it }
         resolve(impression).takeIf { it.isNotEmpty() }
             ?.let { parts += "$charName has this impression of $user:\n$it" }
+        memory.trim().takeIf { it.isNotEmpty() }?.let { parts += it }
         resolve(START_MARKER.replace(card.exampleMessages) { "\n" }).takeIf { it.isNotEmpty() }
             ?.let { parts += "Example dialogue:\n$it" }
 

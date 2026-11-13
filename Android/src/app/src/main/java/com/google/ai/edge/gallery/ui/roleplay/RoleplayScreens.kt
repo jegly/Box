@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.Psychology
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.AlertDialog
@@ -91,6 +92,7 @@ fun RoleplayScreen(
     var showPersonas by remember { mutableStateOf(false) }
     var showSampler by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
+    var memoryFor by remember { mutableStateOf<RoleplayCharacter?>(null) }
     val settingsStore = remember { com.google.ai.edge.gallery.data.characters.RoleplaySettingsStore(context) }
     var defaultModel by remember { mutableStateOf(settingsStore.defaultModel()) }
     // Modelo con el que se abren los chats: el predeterminado de Roleplay (null = hay que elegir).
@@ -181,12 +183,17 @@ fun RoleplayScreen(
                             context.startActivity(Intent.createChooser(send, "Compartir personaje"))
                         },
                         onDelete = { toDelete = c },
+                        onMemories = { memoryFor = c },
                         modelAvailable = true,
                     )
                 }
             }
         }
         }
+    }
+
+    memoryFor?.let { c ->
+        MemoryDialog(character = c, viewModel = viewModel, onDismiss = { memoryFor = null })
     }
 
     if (showSettings) {
@@ -252,6 +259,7 @@ private fun CharacterRow(
     onEdit: () -> Unit,
     onShare: () -> Unit,
     onDelete: () -> Unit,
+    onMemories: () -> Unit,
     modelAvailable: Boolean,
 ) {
     val avatar = remember(character.avatarPath) {
@@ -290,6 +298,7 @@ private fun CharacterRow(
                         color = MaterialTheme.colorScheme.error)
                 }
             }
+            IconButton(onClick = onMemories) { Icon(Icons.Rounded.Psychology, contentDescription = "Memoria") }
             IconButton(onClick = onEdit) { Icon(Icons.Rounded.Edit, contentDescription = "Editar") }
             IconButton(onClick = onShare) { Icon(Icons.Rounded.Share, contentDescription = "Compartir") }
             IconButton(onClick = onDelete) { Icon(Icons.Rounded.Delete, contentDescription = "Borrar") }

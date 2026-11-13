@@ -27,6 +27,7 @@ import kotlinx.coroutines.withContext
 class CharacterRepository @Inject constructor(
     private val characterDao: CharacterDao,
     private val chatRepository: ChatRepository,
+    private val memoryRepository: MemoryRepository,
     @ApplicationContext private val context: Context,
 ) {
     fun observeAll(): Flow<List<RoleplayCharacter>> = characterDao.getAll()
@@ -87,11 +88,22 @@ class CharacterRepository @Inject constructor(
         persona: UserPersona? = null,
         random: Random = Random.Default,
     ): Conversation = withContext(Dispatchers.IO) {
+        // Memoria a largo plazo: los recuerdos más recientes entran en el prompt del chat nuevo.
+        val settings = RoleplaySettingsStore(context)
+        val memoryText = if (settings.memoryEnabled(character.id)) {
+            MemoryPromptBuilder.build(
+                charName = character.name.trim().ifEmpty { "Character" },
+                memories = memoryRepository.getAll(character.id).map { MemoryEntry(it.content, it.createdAt) },
+                max = settings.memoryMaxInjections(),
+                now = System.currentTimeMillis(),
+            )
+        } else ""
         val built = CharacterPromptBuilder.build(
             card = character.toCard(),
             userName = persona?.name ?: CharacterPromptBuilder.DEFAULT_USER_NAME,
             userDescription = persona?.description ?: "",
             impression = character.impression,
+            memory = memoryText,
         )
         val greeting = CharacterPromptBuilder.pickGreeting(built.greetings, random)
         val conversation = chatRepository.createConversation(
