@@ -412,9 +412,18 @@ fun GalleryNavHost(
     // Roleplay: lista de personajes.
     composable(route = ROUTE_ROLEPLAY) {
       val llmChatTask = modelManagerViewModel.getTaskById(BuiltInTaskId.LLM_CHAT)
+      val roleplayUiState by modelManagerViewModel.uiState.collectAsState()
+      // Solo los modelos ya descargados o importados se pueden usar para chatear.
+      val downloadedModels =
+        llmChatTask?.models
+          ?.filter {
+            roleplayUiState.modelDownloadStatus[it.name]?.status ==
+              com.google.ai.edge.gallery.data.ModelDownloadStatusType.SUCCEEDED
+          }
+          ?.map { it.name } ?: emptyList()
       com.google.ai.edge.gallery.ui.roleplay.RoleplayScreen(
         navigateUp = { navController.navigateUp() },
-        modelName = llmChatTask?.models?.firstOrNull()?.name,
+        availableModels = downloadedModels,
         onOpenChat = { modelName, conversationId ->
           lastNavigatedModelName = ""
           navController.navigate(

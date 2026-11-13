@@ -191,6 +191,13 @@ open class LlmChatViewModelBase() : ChatViewModel() {
     }
   }
 
+  // true si el chat abierto es de un personaje de Roleplay.
+  private var isRoleplayChat = false
+
+  fun setRoleplayChat(value: Boolean) {
+    isRoleplayChat = value
+  }
+
   private val _currentSystemPrompt = MutableStateFlow("")
   val currentSystemPrompt: StateFlow<String> = _currentSystemPrompt.asStateFlow()
 
@@ -248,7 +255,8 @@ open class LlmChatViewModelBase() : ChatViewModel() {
       if (helper is com.google.ai.edge.gallery.runtime.LlamaCppModelHelper) {
         val history =
           previous.map { (if (it.side == ChatSide.USER) "user" else "assistant") to it.content }
-        helper.refreshSampler(model)
+        // El muestreo de Roleplay solo vale en chats de personaje; los normales usan el del modelo.
+        if (isRoleplayChat) helper.refreshSampler(model) else helper.resetSampler(model)
         helper.seedConversation(model, prompt, history)
         return
       }

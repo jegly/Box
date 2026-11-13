@@ -156,7 +156,9 @@ fun ChatView(
       if (conv?.systemPrompt?.isNotEmpty() == true) {
         llmViewModel.setCurrentSystemPrompt(conv.systemPrompt)
       }
+      llmViewModel.setRoleplayChat(conv?.characterId?.isNotBlank() == true)
     } else {
+      llmViewModel.setRoleplayChat(false)
       Log.d(TAG, "No existing conversation for model ${selectedModel.name}, starting fresh")
     }
   }

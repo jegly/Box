@@ -50,7 +50,6 @@ object LlamaCppModelHelper : LlmModelHelper {
         val engine = LlamaCppEngine()
         engines[model.name] = engine
         appContext = context.applicationContext
-        engine.samplerSettings = com.google.ai.edge.gallery.data.characters.SamplerSettingsStore(context).current()
 
         // El tamaño del contexto es el "Max tokens" del modelo (cualquier número). Antes se usaba
         // el máximo del modelo, que en Gemma es enorme y gasta mucha RAM.
@@ -78,6 +77,28 @@ object LlamaCppModelHelper : LlmModelHelper {
                 Log.e(TAG, "Failed to load GGUF model", e)
                 onDone(e.message ?: "Failed to load GGUF model")
             }
+        )
+    }
+
+    /**
+     * Chat normal de Box: vuelve a los ajustes del propio modelo (los que usa Box sin Roleplay),
+     * por si este mismo modelo cargado venía de un chat de personaje.
+     */
+    fun resetSampler(model: Model) {
+        val topK = model.getIntConfigValue(key = ConfigKeys.TOPK, defaultValue = DEFAULT_TOPK)
+        val topP = model.getFloatConfigValue(key = ConfigKeys.TOPP, defaultValue = DEFAULT_TOPP)
+        val temperature = model.getFloatConfigValue(key = ConfigKeys.TEMPERATURE, defaultValue = DEFAULT_TEMPERATURE)
+        engines[model.name]?.applySampler(
+            com.google.ai.edge.gallery.data.characters.SamplerSettings(
+                temperature = temperature,
+                dynTempRange = 0f,
+                topK = topK,
+                topP = topP,
+                minP = 0.1f,
+                repeatPenalty = 1.1f,
+                repeatLastN = 256,
+                dryMultiplier = 0f,
+            )
         )
     }
 

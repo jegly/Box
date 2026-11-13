@@ -76,8 +76,8 @@ import java.io.File
 @Composable
 fun RoleplayScreen(
     navigateUp: () -> Unit,
-    /** Nombre del modelo con el que se abre el chat (null = todavía no hay ningún modelo). */
-    modelName: String?,
+    /** Nombres de los modelos descargados que se pueden usar para chatear. */
+    availableModels: List<String>,
     onOpenChat: (modelName: String, conversationId: String) -> Unit,
     onEditCharacter: (id: String) -> Unit,
     viewModel: RoleplayViewModel = hiltViewModel(),
@@ -90,6 +90,15 @@ fun RoleplayScreen(
     val personas by viewModel.personas.collectAsState()
     var showPersonas by remember { mutableStateOf(false) }
     var showSampler by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
+    val settingsStore = remember { com.google.ai.edge.gallery.data.characters.RoleplaySettingsStore(context) }
+    var defaultModel by remember { mutableStateOf(settingsStore.defaultModel()) }
+    // Modelo con el que se abren los chats: el predeterminado de Roleplay (null = hay que elegir).
+    val modelName = com.google.ai.edge.gallery.data.characters.RoleplayModelResolver.resolve(
+        characterModel = null,
+        defaultModel = defaultModel,
+        available = availableModels,
+    )
 
     LaunchedEffect(message) {
         message?.let {
@@ -112,8 +121,8 @@ fun RoleplayScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showSampler = true }) {
-                        Icon(Icons.Rounded.Tune, contentDescription = "Muestreo")
+                    IconButton(onClick = { showSettings = true }) {
+                        Icon(Icons.Rounded.Tune, contentDescription = "Configuración de Roleplay")
                     }
                     IconButton(onClick = {
                         // Las tarjetas suelen ser .json o .png; algunos gestores no reconocen
@@ -157,6 +166,9 @@ fun RoleplayScreen(
                         onChat = {
                             if (modelName != null) {
                                 viewModel.startChat(c, modelName) { convId -> onOpenChat(modelName, convId) }
+                            } else {
+                                // Todavía no hay modelo elegido: se abre la configuración para elegir uno.
+                                showSettings = true
                             }
                         },
                         onEdit = { onEditCharacter(c.id) },
@@ -169,12 +181,25 @@ fun RoleplayScreen(
                             context.startActivity(Intent.createChooser(send, "Compartir personaje"))
                         },
                         onDelete = { toDelete = c },
-                        modelAvailable = modelName != null,
+                        modelAvailable = true,
                     )
                 }
             }
         }
         }
+    }
+
+    if (showSettings) {
+        RoleplaySettingsDialog(
+            availableModels = availableModels,
+            selectedModel = modelName,
+            onSelectModel = {
+                settingsStore.setDefaultModel(it)
+                defaultModel = it
+            },
+            onOpenSampler = { showSampler = true },
+            onDismiss = { showSettings = false },
+        )
     }
 
     if (showSampler) {
