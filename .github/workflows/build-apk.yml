@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK1
 
 # Se ejecuta a mano: pestaña Actions -> Build APK -> Run workflow.
 # El APK queda en "Artifacts" al terminar. La primera compilación es larga porque
