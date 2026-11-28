@@ -36,7 +36,7 @@
 [![App Language](https://img.shields.io/badge/App%20Language-EN%20%C2%B7%20FR%20%C2%B7%20PT%20%C2%B7%20PT--BR%20%C2%B7%20DE%20%C2%B7%20ZH--CN-8BE9FD.svg)]()
 [![Vulkan](https://img.shields.io/badge/Vulkan-GGUF%20GPU%20Offload-FFB86C.svg)]()
 
-> ⭐️ **If this project helped you, please star it** — it helps others find it.
+> ⭐️ **If this project helped you, please star it** it helps others find it.
 >
 > We've hit **50K downloads**!!!  Thank you to everyone for supporting Box, i never would have thought Box would have so many users :) !! All releases are now PQC ML-DSA-87 signed.
 
