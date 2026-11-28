@@ -270,9 +270,9 @@ Built [OfflineLLM](https://github.com/jegly/OfflineLLM) first — a privacy-firs
 
 Box is an Android app for running AI entirely on-device — chat, voice mode, image generation, image upscaling, speech-to-text, text-to-speech, document analysis, and vision, all without a network connection. It inherits the full feature set of the upstream Google AI Edge Gallery and layers on top: encrypted conversations, biometric lock, hard offline mode, and three additional native inference engines (llama.cpp, stable-diffusion.cpp, whisper.cpp) alongside LiteRT.
 
-# Box: On-Device AI. No Cloud. No Compromise.
+# Box: chat, images, voice, music and more, all in one box on your phone
 
-**What makes Box unique?** You can sit at your desk, tap two buttons, and have a real flowing voice conversation with an AI — no wake word, no account, no server, no subscription. It listens, thinks, and speaks back sentence by sentence before it's even finished generating. Point the camera at something and ask about it out loud. The AI sees it and answers. All of it runs on the phone in your hand, completely offline, faster than you'd expect. 
+**What makes Box unique?** Start a voice conversation with an AI by tapping two buttons. No wake word, account, server or subscription required. Box listens to what you say, processes your request and responds aloud, sentence by sentence, while it's still generating the rest of the answer. You can also point your camera at something and ask a question about it. Box analyses the image and responds to your voice. Everything runs locally on your phone, with no internet connection required.
 
 
 ---
@@ -547,7 +547,7 @@ Open `Android/` in Android Studio and run on a physical device for best performa
 
 Box would not exist without the work of the teams and individuals behind the projects it builds on.
 
-### 🙌🙌🙌 A huge shout-out to the LiteRT Community — and to everyone building models 🙌🙌🙌
+### 🙌🙌🙌 A huge shout-out to the LiteRT Community and to everyone building models  🙌🙌🙌
 
 **[Hugging Face LiteRT Community](https://huggingface.co/litert-community)** — the single biggest
 reason Box can do what it does. Nearly every model Box ships a card for is converted, quantised,
@@ -661,7 +661,7 @@ Licensed under the Apache License, Version 2.0
 
 ## Box for Linux
 
-Box is also available on Linux — a separate desktop app (Ubuntu, amd64), written from scratch and open source (GPL-3.0). Get it at **[github.com/jegly/B0x](https://github.com/jegly/B0x)**.
+Box is also available on Linux, a separate desktop app (Ubuntu, amd64), written from scratch and open source (GPL-3.0). Get it at **[github.com/jegly/B0x](https://github.com/jegly/B0x)**.
 
 ---
 
