@@ -40,7 +40,7 @@
 >
 > We've hit **50K downloads**!!!  Thank you to everyone for supporting Box, i never would have thought Box would have so many users :) !! All releases are now PQC ML-DSA-87 signed.
 
-[![Download Box v3.5.7 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
+[![Download Box v3.5.8 APK](https://img.shields.io/badge/Download-Latest_APK-A6E3A1?style=for-the-badge&logo=android&logoColor=1E1E2E)](https://github.com/jegly/Box/releases/latest)
 
 > **Note:** If you're using a custom ROM (LineageOS, GrapheneOS, CalyxOS), download the `custom-rom-support` APK from the [latest release](https://github.com/jegly/Box/releases/latest) instead.
 
@@ -92,12 +92,19 @@ Box began as a fork of [Google AI Edge Gallery](https://github.com/google-ai-edg
 <details>
 <summary>
 
-## Changelog v1.0.7 – v3.5.7
+## Changelog v1.0.7 – v3.5.8
 
 </summary>
 
 | Version | Feature | Details |
 |---|---|---|
+| v3.5.8 | **🔐 MCP: "Always allow" now sticks (#212)** | Choosing **Always allow** in the MCP permission dialog behaved exactly like **Allow once** — the next call asked again. The choice is now saved for that exact server and tool and survives new chats and restarts. **Allow once**, **Deny** and the revoke button work as before, and every other tool still asks. |
+| v3.5.8 | **🔀 MCP: same tool name on two servers (#213)** | If two MCP servers offered a tool with the same name, Box always used the first. Every call now goes to exactly one server and tool, and a permission given to one server never applies to another. When names clash, the model sees the tool as `name@xxxxxxxx` (a short code from the server address — the address itself is never shown to the model, since URLs can hold secrets). Disabled servers and tools can no longer be called by name. |
+| v3.5.8 | **🎤 Quieter microphones (#218)** | On some phones (reported on a Pixel 9a on GrapheneOS) normal speaking volume wasn't picked up, so the Live Translator said "Didn't catch that" unless you shouted. Speech detection now adapts to how quiet the microphone is, and tapping stop after you've spoken always passes your audio on instead of discarding it. Box Assist voice questions use the same recorder and benefit too. |
+| v3.5.8 | **🔊 Your own speech engine now works (#219)** | Box could only see Google's text-to-speech engine, so on phones without it the Live Translator said "No speech engine on this device" even with another engine (Marmalade, RHVoice, eSpeak NG…) installed and selected. Box now sees the engine chosen in Android's settings — Main and custom-rom-support. |
+| v3.5.8 | **🗣️ Kokoro (English) no longer closes the app (#223)** | Loading Kokoro could shut Box down a few seconds in: the speech library requires a language for the newer Kokoro model and quits the whole app when none is set. Box now sets English. Kokoro runs on the processor only. |
+| v3.5.8 | **🧠 New models: Qwen3-0.6B, Qwen3-1.7B, Qwen3-4B-Instruct-2507** | Three Alibaba Qwen3 text models (Apache-2.0). **0.6B** (586 MB) is tiny and quick; **1.7B** (2.0 GB, 6 GB RAM+) is a good everyday small model; **4B-Instruct-2507** (2.7 GB, 8 GB RAM+, 2048-token context) is the strongest and answers directly without a thinking step. They run on the processor by default, and the 0.6B and 1.7B may show their reasoning in a `<think>` block. |
+| v3.5.8 | **Under the hood** | AGP 9.5.3, Gradle 9.9.3, Material 3 1.5.0 (stable), KSP 2.3.14, lifecycle 2.11.1, Ktor 3.6.2 and other library updates. LiteRT and LiteRT-LM are deliberately held at their current versions. Release builds remain R8-obfuscated and PQC ML-DSA-87 signed. |
 | v3.5.7 | **✂️ Background Removal — built in, fully offline, no Google Play services (#153)** | Background Removal used ML Kit's subject segmentation, where **Google Play services** downloads and runs the model — so it could never work on GrapheneOS and other de-Googled ROMs, and leaving the screen there showed a "requires Google Play services" message. It now runs **U²-Net**, an open-source (Apache-2.0) cut-out model **built into the app**, on the phone's GPU via LiteRT: no download, no internet, no Google Play services, on **both Main and custom-rom-support**. Edges are softer than before, so hair and fine outlines keep their shape. Cut-outs are saved at up to 2048 px on the longest side. Bundling the model makes the app about 88 MB larger. |
 | v3.5.7 | **🌍 New model: Hy-MT2-1.8B — translation** | Tencent's 1.8B translation model, for translating text between **33 languages**. It's a translation model, not a chat model: start your message with an instruction such as *"Translate the following text into French. Note that you should only output the translated result without any additional explanation:"* and then your text. Works best with one translation per chat. Runs on the processor by default; needs 8 GB of RAM or more. 1.8 GB download, Apache-2.0. |
 | v3.5.7 | **Image generator layout fix (#203)** | On the Stable Diffusion image screen, the **Generate** button could sit underneath the navigation bar on phones and tablets using three-button navigation. It now sits above it. The keyboard also covered the prompt fields — longer prompts couldn't be scrolled into view and the negative prompt was hidden while typing. The screen now shrinks above the keyboard so both stay visible. |
@@ -584,7 +591,9 @@ always welcome.
 
 **[Hy-MT2](https://huggingface.co/tencent/Hy-MT2-1.8B)** — Tencent for the Hy-MT2-1.8B translation model (Apache-2.0), and the [Hy-MT2-1.8B LiteRT-LM](https://huggingface.co/litert-community/Hy-MT2-1.8B) conversion.
 
-**[off-grid-mobile-ai](https://github.com/alichherawalla/off-grid-mobile-ai)** — Mohammed Ali Chherawalla for the on-device Stable Diffusion Android implementation, which was instrumental in getting efficient on-device image generation working and influenced parts of Box’s ImgGen pipeline.
+**[Qwen3](https://huggingface.co/Qwen)** — the Alibaba Qwen team for the Qwen3-0.6B, Qwen3-1.7B and Qwen3-4B-Instruct-2507 models (Apache-2.0), and the [litert-community](https://huggingface.co/litert-community) conversions.
+
+**[off-grid-mobile-ai](https://github.com/alichherawalla/off-grid-mobile-ai)** — Mohammed Ali Chherawalla whose on-device Stable Diffusion Android app inspired Box’s early image-generation work. Box’s current pipeline is its own, built on stable-diffusion.cpp via JNI.
 
  **[PocketSage](https://github.com/umerarif11/pocketsage)** — Umer Arif for the clean, fully offline RAG-on-Android
   reference implementation that the Document Q&A feature in Box is based on.
@@ -627,8 +636,8 @@ Licensed under the Apache License, Version 2.0
 
   | Variant | SHA-256 |
   |---|---|
-  | main | *sha256:3171ea21ee3fea6c6374050ec184855226be99f611921bf3e78bbe70a60e1d19* |
-  | custom-rom-support | *sha256:76dbea78ae863769f4a302172c2b93e5f487be0ac1a462bf6cf1513be62f8b49* |
+  | main | *sha256:d394dc50290902c4045d854e5dd9a0f19bca76fdfe84776fa86953936f500af6* |
+  | custom-rom-support | *sha256:909d66f653206bdb0723d27d9c27e2e441cf7b2601b24d1518a4126d9cb2af5e* |
 
   
   ### Signing certificate
@@ -650,193 +659,9 @@ Licensed under the Apache License, Version 2.0
 
 ---
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/jegly/Box/main/images/box-linux-catppuccin-latte.svg" alt="Box for Linux" width="90%" />
-</p>
+## Box for Linux
 
-[![AI Assistant](https://img.shields.io/badge/AI%20Assistant-Local%20%26%20Agentic-BD93F9.svg)]()
-[![Python](https://img.shields.io/badge/Python-3.14-BD93F9.svg?logo=python&logoColor=white)](https://www.python.org)
-[![GTK4](https://img.shields.io/badge/GTK4-libadwaita-8BE9FD.svg)](https://www.gtk.org)
-[![LiteRT-LM](https://img.shields.io/badge/LiteRT--LM-Local%20Inference-FF79C6.svg)](https://github.com/google-ai-edge/LiteRT-LM)
-[![llama.cpp](https://img.shields.io/badge/llama.cpp-GGUF%20Engine-FF79C6.svg)](https://github.com/ggml-org/llama.cpp)
-[![Box Code](https://img.shields.io/badge/Box%20Code-Local%20Coding%20Agent-50FA7B.svg)]()
-[![Image Studio](https://img.shields.io/badge/Image%20Studio-Generate%20%7C%20Inpaint%20%7C%20Upscale-50FA7B.svg)]()
-[![Voice Mode](https://img.shields.io/badge/Voice%20Mode-Speech--to--Speech-50FA7B.svg)]()
-[![Vision](https://img.shields.io/badge/Vision-Live%20Camera-50FA7B.svg?logo=camera&logoColor=white)]()
-[![Knowledge Base](https://img.shields.io/badge/Knowledge%20Base-RAG%20%2B%20Notebooks-50FA7B.svg)]()
-[![Sandboxed](https://img.shields.io/badge/Inference-Kernel%20Sandboxed-FFB86C.svg)]()
-[![Ubuntu](https://img.shields.io/badge/Ubuntu-amd64-FFB86C.svg?logo=ubuntu&logoColor=white)](https://ubuntu.com)
-[![On-Device](https://img.shields.io/badge/Network-On--Device%20Only-FF5555.svg)]()
-[![License](https://img.shields.io/badge/License-GPL--3.0-FF5555.svg)](https://github.com/jegly/B0x/blob/main/LICENSE)
-[![Package](https://img.shields.io/badge/Package-.deb-6272A4.svg)]()
-
-## Box for Linux (Desktop)
-
-**Box for Linux** is a private, on-device **AI workbench** for the Linux
-desktop. It chats with text, images, and audio; codes autonomously in its own
-agent workspace; generates, inpaints, and upscales images; searches the web;
-reads, audits, and edits your files; and answers from your documents — all on
-your own machine, with no account and no telemetry. Built on Google's
-**LiteRT-LM** runtime as a native GTK4 / libadwaita app, with a bundled
-**llama.cpp** engine so GGUF models run side by side with `.litertlm` ones.
-
-> [!IMPORTANT]
-> Box for Linux is a **separate application, written from scratch** as its own
-> codebase. It is not a port or fork of the Android app. The two share a name
-> and a design philosophy and have many of the same features, but they are
-> independent projects. The Android app is open source (Apache-2.0). **Box for
-> Linux is open source (GPL-3.0)**: the source lives in the
-> [B0x repository](https://github.com/jegly/B0x) alongside the `.deb` releases.
-
-## What is Box for Linux?
-
-Everything runs on your own hardware: the language models, the coding agent,
-the diffusion pipelines, the retrieval embedder, the image captioner, and the
-text-to-speech. The interface is native GTK, so it starts in under a second,
-uses modest memory, and fits your desktop. A nav rail puts every mode one
-click away — Chats, Notebooks, Image Studio, and Box Code — and your work
-stays on your machine.
-
----
-
-## Core Features
-
-### Two Inference Engines
-Box is **LiteRT-first**: Gemma `.litertlm` / `.task` models run in-process on
-Google's LiteRT-LM runtime with vision, audio, and native tool calling. A
-bundled **llama.cpp** engine (CPU and Vulkan builds) runs **GGUF** models
-alongside — Gemma QAT, Qwen coders, and anything else in the format — served
-by a sandboxed local `llama-server` with tool calling, prefix caching, and
-some forty tuning knobs in Preferences. A built-in model hub downloads
-checksum-verified chat, image, and coder models in one click, and Box even
-self-heals official GGUFs that ship with broken vocabularies (the gemma-4 QAT
-duplicate-token assert) at load time.
-
-### Box Code — a Local Coding Agent
-A standalone agent workspace in the spirit of Claude Code, running entirely on
-your machine with **either engine — LiteRT or GGUF**. Point it at a project
-folder and give it tasks: it explores with `glob`/`grep`/`read`, edits with
-exact-match patches, runs tests and commands in a **kernel-sandboxed shell**
-(writes confined to the project, no network), keeps a todo list, and asks you
-when genuinely blocked. Sessions persist and resume; transcripts show every
-tool call with syntax-highlighted code. Two permission modes: **Ask** (approve
-each risky action, with previews of the exact edit or command) or **Auto**
-(walk away — the sandbox still confines it). Type ahead while it works, press
-Esc to interrupt, and watch it think ("Herding electrons… 42s · 3 tools").
-Optional, off by default: web research through two vetted tools while the
-shell stays offline. Project `AGENTS.md` files are honoured automatically.
-
-### Image Studio — Generate, Inpaint, Erase, Upscale
-On-device image generation with **two engines**. Google's **LiteRT diffusion
-pipelines** run Z-Image Turbo and FLUX.2-klein as chunked `.tflite` graphs.
-The bundled **stable-diffusion.cpp** engine runs SD 1.5 / 2.1 checkpoints and
-**component bundles — Z-Image Turbo and FLUX.2-klein as GGUFs at any
-resolution**, downloaded resumably in one click. The studio does img2img,
-**inpainting** with a paintable mask, A1111-style **hires fix**, LoRA with
-webui prompt syntax, step caching for real CPU speedups, live previews as the
-image resolves, seed reuse, and webui-compatible metadata embedded in every
-PNG. An **Erase** tab removes objects with MI-GAN, and **Upscale** does exact
-4× with EDSR. GPU users get Vulkan builds with low-VRAM offload switches.
-
-### Tools & Agent Mode (Chat)
-Chat-side agent mode chains web search (DuckDuckGo over HTTPS, no API key),
-file reading, and grep across a workspace folder to handle multi-step
-requests, with a per-message cap and a live progress pill. Every tool call
-appears as a collapsible card with its arguments and result. Out-of-workspace
-file access is opt-in and prompts per path.
-
-### Local File & Log Audit
-Give Box a file — a system log, a config — and ask for an audit. It
-map-reduces files larger than the context window into a single report with
-live progress, on either engine.
-
-### Knowledge Base: Document Q&A
-Attach PDFs, Markdown, source files, or plain text and Box indexes them for
-retrieval; answers cite the passages used. **Notebooks** are reusable document
-collections that attach to any chat, with optional auto-attach.
-
-### Local Chat
-Multi-turn conversations with streaming tokens, Markdown and LaTeX rendering,
-**syntax-highlighted code blocks**, and attachments (text, PDF, image, audio).
-Gemma 4 E2B/E4B are the recommended daily drivers with up to 128K context.
-Conversations save and resume; the sidebar is searchable; a bar tracks context
-usage.
-
-### Voice, Vision & Memory
-Hands-free **voice conversation mode** with sentence-by-sentence TTS (Piper,
-six voices), push-to-talk, and audio-aware models. **Live camera vision**
-through GStreamer/PipeWire captures a frame per turn. **Persistent memory**
-recalls facts you explicitly save, with an inspector to review and delete.
-
-### Themes & Glass
-**52 themes** — Catppuccin, Dracula, 44 Ptyxis terminal palettes, and two
-built for translucency: **Glass** and **Liquid Glass**. Flip on **Glass
-mode** for a see-through window with luminous hairline edges, or **Liquid
-Glass** for pill controls, specular highlights, and an accent light-wash —
-each works with any theme, with an opacity dial. Fourteen accent colours,
-bubble palettes and opacity, custom chat and **header fonts** (80 bundled,
-DotGothic16 included), pastel traffic-light window controls, and a
-repositionable nav rail (left/right/top/bottom, labels optional).
-
-### Security & Privacy by Architecture
-Model servers and image generators run **kernel-sandboxed** (Landlock LSM
-where available, systemd hardening otherwise, honestly reported in-app):
-read-only on their own files, one localhost port, **no outbound network**.
-The Box Code shell gets the same treatment. **App Lock** gates the whole app
-— every window — behind an Argon2id passphrase, with close-to-tray locking.
-HTTPS-only networking, checksum-verified downloads, no account, no telemetry.
-
----
-
-> [!NOTE]
-> ## You decide what runs
-
-Each capability in Box for Linux is its own switch, and they all start off.
-Vision, audio, TTS, the knowledge base, web search, the filesystem, agent
-mode, Box Code's web research, and memory are opt-in.
-
-| Control | What it means |
-|---|---|
-| Granular toggles | Each capability is its own switch. It runs only after you turn it on |
-| Permission prompts | Any tool that touches your machine asks first: Allow once, for this chat, always, or deny |
-| Writes always ask | File writes and deletes prompt every time; you cannot set them to trust-always |
-| Workspace by default | File access stays inside a folder you choose; Box Code is hard-scoped to its project folder |
-| Kernel sandboxing | Inference servers and the agent shell run confined — no network, no stray writes — and the app reports what's actually enforced |
-| Per-chat overrides | Turn any tool on or off for a single conversation, apart from the global setting |
-| HTTPS-only | Every network request must use HTTPS; Box rejects plain HTTP for model downloads and search results |
-| Fully on-device | No account and no telemetry. Models download once, then run offline |
-
----
-
-## Install
-
-Download the latest `.deb` (currently `box_0.4.0_amd64.deb`) from the
-[Releases](https://github.com/jegly/B0x/releases) page:
-
-```bash
-sudo apt install ./box_0.4.0_amd64.deb
-```
-
-The package pulls its system dependencies automatically. Launch **Box** from
-your application menu, or run `box` in a terminal. On first run, Box offers to
-download a model (Gemma 4 E2B, ~2.59 GB). After that, it runs offline.
-
-### Requirements
-
-- Ubuntu (amd64) with a GTK4 / libadwaita desktop session
-- 3–4 GB of free storage for a chat model; 5–10 GB more if you want the
-  image-generation bundles
-- A webcam is optional, for live vision mode
-- CPU-only works fine; GPU acceleration (Vulkan) is faster but not required.
-  NPU and GPU paths are included, though not all hardware is tested.
-
----
-
-## Source & License
-
-The Android app is open source (Apache-2.0). Box for Linux is open source
-under the [GNU General Public License v3.0](https://github.com/jegly/B0x/blob/main/LICENSE)
-(or later) — Copyright © 2026 Jegly.
+Box is also available on Linux — a separate desktop app (Ubuntu, amd64), written from scratch and open source (GPL-3.0). Get it at **[github.com/jegly/B0x](https://github.com/jegly/B0x)**.
 
 ---
 
