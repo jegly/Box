@@ -264,7 +264,7 @@ Built [OfflineLLM](https://github.com/jegly/OfflineLLM) first — a privacy-firs
 
 ## What is Box?  
 
-<img src="https://raw.githubusercontent.com/jegly/Box/main/images/box-banner-minimal-1600x320.svg" alt="Box Header" width="1000" />  
+<img src="https://raw.githubusercontent.com/jegly/Box/main/images/box-banner-minimal_refreshed.svg" alt="Box Header" width="1000" />  
 
 
 
