@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/jegly/Box/main/images/b02_catppuccin-mocha.svg" alt="Box Header" width="100%" />
+  <img src="https://raw.githubusercontent.com/jegly/Box/main/images/b02_catppuccin-mocha.svg" alt="Box Header" width="84%" />
 </p>
 
 [![Fork](https://img.shields.io/badge/Fork-Google%20AI%20Edge-6272A4.svg)](https://github.com/google-ai-edge/gallery)
